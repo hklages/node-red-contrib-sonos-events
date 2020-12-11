@@ -1,19 +1,18 @@
 <!-- Sonos Events Notify Node -->
 <!-- Registering Node (JavaScript) -->
 <script type="text/javascript">
-  /* global  RED */
-  /* eslint no-undef: "error" */
   RED.nodes.registerType('sonosevents-notify', {
     category: 'sonosevents',
     defaults: {
       confignode: {
         value: '',
         type: 'sonosevents-config'
-      }
+      },
+      outputs: { value: 1 },
     },
     inputs: 0, // set the number of inputs - only 0 or 1
-    outputs: 1, // set the number of outputs - 0 to n
-    color: '#AAAAAA',
+    icon: 'sonos.png', // saved in  icons/myicon.png
+    color: '#FF7F00',
     label: function() {
       return 'events';
     },
@@ -28,6 +27,12 @@
     <div class="form-row">
       <label for="node-input-confignode"> Config Node</label>
       <input type="text" id="node-input-confignode"/>
+    </div>
+
+    <!-- Amount of outputs -->
+    <div class="form-row">
+      <label for="node-input-outputs"><i class="fa fa-tag"></i> Nb of outputs</label>
+      <input type="text" id="node-input-outputs" placeholder="1"/>
     </div>
 
     <!-- Node name -->
