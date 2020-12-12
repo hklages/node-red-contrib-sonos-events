@@ -13,21 +13,65 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config)
    
     const node = this
-    
+   
     // clear node status
     node.status({})
 
-    const configNode = RED.nodes.getNode(config.confignode)    
-    const player = new SonosDevice(configNode.ipaddress)
-    console.log(`ip address: ${configNode.ipaddress}`)
+    // create new player from input such as 192.168.178.35 -Küche 
+    const playerHostname = config.playerHostname.split('::')[0]
+
+    const player = new SonosDevice(playerHostname)
+    const coordinator = new SonosDevice('192.168.178.37')
     
-    player.AVTransportService.Events.on(ServiceEvents.Data, data => {
-      node.send({ payload: data, topic: 'AVTransport' })
+    // player.GetZoneGroupState()
+    //   .then(success => {
+    //     console.log(success.ZoneGroupState.ZoneGroups.ZoneGroup)
+    //   })
+    //   .catch(console.error)
+
+    // household events - Zone
+    player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
+      node.send(
+        [
+          { payload: data, topic: 'ZoneGroup' }, 
+          null,
+          null
+        ]
+      )
     })
 
-    player.Events.on(SonosEvents.Mute, mute => {
-      node.send({ payload: mute, topic: 'mute' })
+    // group events - groupMute groupVolume but als AVTransport
+    coordinator.AVTransportService.Events.on(ServiceEvents.Data, data => {
+      node.send(
+        [
+          null, 
+          { payload: data, topic: 'AVTransport' },
+          null
+        ]
+      )
     })
+
+    // player events - volume, mute
+    player.Events.on(SonosEvents.Mute, mute => {
+      node.send(
+        [
+          null,
+          null,
+          { payload: mute, topic: 'mute' },
+        ]
+      )
+    })
+
+    player.AVTransportService.Events.on(ServiceEvents.Data, data => {
+      node.send(
+        [
+          null, 
+          null,
+          { payload: data, topic: 'AVTransport' }
+        ]
+      )
+    })
+
   }
 
   RED.nodes.registerType('sonosevents-notify', SonosNotifyNode)

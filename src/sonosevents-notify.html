@@ -5,17 +5,34 @@
     category: 'sonosevents',
     defaults: {
       confignode: {
-        value: '',
+        value: 'household',
         type: 'sonosevents-config'
       },
-      outputs: { value: 1 },
+      playerHostname: { 
+        value: ''
+      },
+      outputs: { value: 3 },
     },
     inputs: 0, // set the number of inputs - only 0 or 1
-    icon: 'sonos.png', // saved in  icons/myicon.png
-    color: '#FF7F00',
+    icon: 'sonos.png', // saved in icons/myicon.png
+    color: '#e8640c',
     label: function() {
       return 'events';
     },
+    oneditprepare: function() {      
+      const playerList = [
+        {name: "192.168.178.37::Küche"},
+        {name: "192.168.178.36::Bad"},
+        {name: "192.168.178.35::Wohnzimmer"},
+        {name: "192.168.178.34::Erker"}   
+      ]    
+      // set up playerlist
+      for (var i = 0; i < playerList.length; i++) {
+        $('#node-input-playerHostname').append($('<option></option>').attr('value', playerList[i].name).text(playerList[i].name))
+      }
+      // selected playerHostname
+      $('#node-input-playerHostname').val(this.playerHostname)
+    }, 
     paletteLabel: 'sonosevents'
   });
 </script>
@@ -26,7 +43,13 @@
     <!-- Config node -->
     <div class="form-row">
       <label for="node-input-confignode"> Config Node</label>
-      <input type="text" id="node-input-confignode"/>
+      <input type="text" id="node-input-confignode" style="width:70%"></select>
+    </div>
+
+    <!-- SONOS player hostname -->
+    <div class="form-row">
+      <label for="node-input-playerHostname"><i class="fa fa-tasks"></i> Player Hostname</label>
+      <select id="node-input-playerHostname" style="width:70%"></select>
     </div>
 
     <!-- Amount of outputs -->
@@ -45,6 +68,7 @@
     
   </div>
 </script>
+
 
 <!-- Help text (HTML) -->
 <script type="text/x-red" data-help-name="sonosevents-notify">

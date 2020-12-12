@@ -7,7 +7,8 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config)
 
     node = this
-    node.ipaddress = config.ipaddress
+    node.listenerHostname = config.listenerHostname
+    node.listenerPort = config.listenerPort
   }
 
   RED.nodes.registerType('sonosevents-config', SonosEventNode)

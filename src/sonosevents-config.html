@@ -8,11 +8,15 @@
     category: 'config',
     defaults: {
       name: {
+        value: 'household',
+        required: true
+      },
+      listenerHostname: {
         value: '',
         required: true
       },
-      ipaddress: {
-        value: '',
+      listenerPort: {
+        value: '6393',
         required: true
       }
     },
@@ -26,12 +30,12 @@
 <script type="text/x-red" data-template-name="sonosevents-config">
 
 <div class="form-row">
-    <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
-    <input type="text" id="node-config-input-name" placeholder="This Node Name" />
+    <label for="node-config-input-listenerHostname" style="width:50%"><i class="fa fa-globe"></i> Listener IP Address</label>
+    <input type="text" id="node-config-input-listenerHostname" placeholder="192.168.xx.xx" style="width:40%">
 </div>
 
 <div class="form-row">
-    <label for="node-config-input-ipaddress"><i class="fa fa-globe"></i> IP Address</label>
-    <input type="text" id="node-config-input-ipaddress" placeholder="192.168.xx.xx">
+  <label for="node-config-input-listenerPort" style="width:50%"><i class="fa fa-globe"></i> Listener port</label>
+  <input type="text" id="node-config-input-listenerPort" style="width:40%">
 </div>
 </script>
