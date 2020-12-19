@@ -12,67 +12,133 @@ module.exports = function (RED) {
   
     RED.nodes.createNode(this, config)
    
+    // clear node status, get data from dialog
     const node = this
-   
-    // clear node status
     node.status({})
+    const subscriptions = {
+      topology: config.topologyEvent,
+      track: config.trackEvent,
+      groupMute: config.groupMuteEvent,
+      volume: config.volumeEvent,
+      groupVolume: config.groupVolumeEvent
+    }
 
     // create new player from input such as 192.168.178.35 -Küche 
     const playerHostname = config.playerHostname.split('::')[0]
-
     const player = new SonosDevice(playerHostname)
-    const coordinator = new SonosDevice('192.168.178.37')
+    player.LoadDeviceData()
     
-    // player.GetZoneGroupState()
+    // for group action we always need the coordinator
+    // the coordinator may change over the time
+    // TODO How to maintain these changes
+    // player.LoadDeviceData()
     //   .then(success => {
-    //     console.log(success.ZoneGroupState.ZoneGroups.ZoneGroup)
+    //     // TODO extract the coordinator for given player
+    //     console.log(JSON.stringify(success))
+    //     console.log('coordinator>' + player.coordinator)
     //   })
     //   .catch(console.error)
+    const coordinator = new SonosDevice('192.168.178.37') 
+    
+    // Household events - subscription to player
+    if (subscriptions.topology) {
+      player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
+        node.send(
+          [
+            { payload: data, topic: 'zoneGroup' }, 
+            null,
+            null
+          ]
+        )
+      })
+      this.status({ fill: 'green', shape: 'ring', text: 'connected' })
+      console.log('subscribed to ZoneGroupTopology')
+    }
 
-    // household events - Zone
-    player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
-      node.send(
-        [
-          { payload: data, topic: 'ZoneGroup' }, 
-          null,
-          null
-        ]
-      )
-    })
+    // group events - subscription to coordinator
+    if (subscriptions.track) {
+      coordinator.AVTransportService.Events.on(ServiceEvents.Data, data => {
+        node.send(
+          [
+            null, 
+            { payload: data, topic: 'avTransport' },
+            null
+          ]
+        )
+      })
+      this.status({ fill: 'green', shape: 'ring', text: 'connected' })
+      console.log('subscribed to AVTransport')
+    }
+    if (subscriptions.groupMute || subscriptions.groupVolume) {
+      coordinator.GroupRenderingControlService.Events.on(ServiceEvents.Data, data => {
+        node.send(
+          [
+            null, 
+            { payload: data, topic: 'groupRendering' },
+            null
+          ]
+        )
+      })
+      this.status({ fill: 'green', shape: 'ring', text: 'connected' })
+      console.log('subscribed to GroupMute/GroupVolume')
+    }
+    
+    // // player events - subscribe to player
+    if (subscriptions.volume) {
+      player.Events.on(SonosEvents.Volume, mute => {
+        node.send(
+          [
+            null,
+            null,
+            { payload: mute, topic: 'volume' },
+          ]
+        )
+      })
+      console.log('subscribed to Volume')
+      node.status({ fill: 'green', shape: 'ring', text: 'connected' })
+    }
 
-    // group events - groupMute groupVolume but als AVTransport
-    coordinator.AVTransportService.Events.on(ServiceEvents.Data, data => {
-      node.send(
-        [
-          null, 
-          { payload: data, topic: 'AVTransport' },
-          null
-        ]
-      )
-    })
-
-    // player events - volume, mute
-    player.Events.on(SonosEvents.Mute, mute => {
-      node.send(
-        [
-          null,
-          null,
-          { payload: mute, topic: 'mute' },
-        ]
-      )
-    })
-
-    player.AVTransportService.Events.on(ServiceEvents.Data, data => {
-      node.send(
-        [
-          null, 
-          null,
-          { payload: data, topic: 'AVTransport' }
-        ]
-      )
+    node.on('close', function (done) {
+      cancelSubscriptions(player, coordinator, subscriptions, function () {
+        done()
+      })
+        .then(() => {
+          console.log('node-on-close ok.')
+        })
+        .catch(error => {
+          console.log('node-on-close error>>'
+            + JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
     })
 
   }
 
   RED.nodes.registerType('sonosevents-notify', SonosNotifyNode)
+
+  async function cancelSubscriptions (player, coordinator, subscriptions, callback) {
+    // topology: config.topologyEvent,
+    // track: config.trackEvent,
+    // groupMute: config.groupMuteEvent,
+    // volume: config.volumeEvent
+
+    if (subscriptions.topology) {
+      const x = await player.ZoneGroupTopologyService.Events.removeAllListeners(ServiceEvents.Data)
+      console.log('topology subscription canceled' + JSON.stringify(x))  
+    }
+    if (subscriptions.track) {
+      const x = await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvents.Data) 
+      console.log('track subscription canceled' + JSON.stringify(x))  
+    }
+    if (subscriptions.groupMute) {
+      // eslint-disable-next-line max-len
+      await coordinator.GroupRenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
+      //console.log('groupMute subscription canceled' + JSON.stringify(x))  
+    }
+    
+    if (subscriptions.volume) {
+      const x = await player.RenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
+      console.log('volume subscription canceled' + JSON.stringify(x))  
+    }
+    callback()
+  }
 }
