@@ -52,7 +52,7 @@ module.exports = function (RED) {
         )
       })
       this.status({ fill: 'green', shape: 'ring', text: 'connected' })
-      console.log('subscribed to ZoneGroupTopology')
+      node.log('subscribed to ZoneGroupTopology')
     }
 
     // group events - subscription to coordinator
@@ -67,7 +67,7 @@ module.exports = function (RED) {
         )
       })
       this.status({ fill: 'green', shape: 'ring', text: 'connected' })
-      console.log('subscribed to AVTransport')
+      node.log('subscribed to AVTransport')
     }
     if (subscriptions.groupMute || subscriptions.groupVolume) {
       coordinator.GroupRenderingControlService.Events.on(ServiceEvents.Data, data => {
@@ -80,7 +80,7 @@ module.exports = function (RED) {
         )
       })
       this.status({ fill: 'green', shape: 'ring', text: 'connected' })
-      console.log('subscribed to GroupMute/GroupVolume')
+      node.log('subscribed to GroupMute/GroupVolume')
     }
     
     // // player events - subscribe to player
@@ -94,7 +94,7 @@ module.exports = function (RED) {
           ]
         )
       })
-      console.log('subscribed to Volume')
+      node.log('subscribed to Volume')
       node.status({ fill: 'green', shape: 'ring', text: 'connected' })
     }
 
@@ -103,10 +103,10 @@ module.exports = function (RED) {
         done()
       })
         .then(() => {
-          console.log('node-on-close ok.')
+          node.log('node-on-close ok.')
         })
         .catch(error => {
-          console.log('node-on-close error>>'
+          node.log('node-on-close error>>'
             + JSON.stringify(error, Object.getOwnPropertyNames(error)))
         })
     })
@@ -122,22 +122,18 @@ module.exports = function (RED) {
     // volume: config.volumeEvent
 
     if (subscriptions.topology) {
-      const x = await player.ZoneGroupTopologyService.Events.removeAllListeners(ServiceEvents.Data)
-      console.log('topology subscription canceled' + JSON.stringify(x))  
+      await player.ZoneGroupTopologyService.Events.removeAllListeners(ServiceEvents.Data)
     }
     if (subscriptions.track) {
-      const x = await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvents.Data) 
-      console.log('track subscription canceled' + JSON.stringify(x))  
+      await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvents.Data) 
     }
     if (subscriptions.groupMute) {
       // eslint-disable-next-line max-len
       await coordinator.GroupRenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
-      //console.log('groupMute subscription canceled' + JSON.stringify(x))  
     }
     
     if (subscriptions.volume) {
-      const x = await player.RenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
-      console.log('volume subscription canceled' + JSON.stringify(x))  
+      await player.RenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
     }
     callback()
   }
