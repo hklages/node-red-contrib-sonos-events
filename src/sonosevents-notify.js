@@ -2,6 +2,9 @@ const { SonosEvents } = require('@svrooij/sonos/lib')
 const SonosDevice = require('@svrooij/sonos').SonosDevice
 const ServiceEvents = require('@svrooij/sonos').ServiceEvents
 
+const { transformAvTransportData, transformZoneData
+} = require('./Helper.js')
+
 module.exports = function (RED) {
   'use strict'
 
@@ -22,8 +25,8 @@ module.exports = function (RED) {
       volume: config.volumeEvent,
       groupVolume: config.groupVolumeEvent
     }
-
-    // create new player from input such as 192.168.178.35 -Küche 
+    
+    // create new player from input such as 192.168.178.35 -Bad 
     const playerHostname = config.playerHostname.split('::')[0]
     const player = new SonosDevice(playerHostname)
     player.LoadDeviceData()
@@ -38,14 +41,15 @@ module.exports = function (RED) {
     //     console.log('coordinator>' + player.coordinator)
     //   })
     //   .catch(console.error)
-    const coordinator = new SonosDevice('192.168.178.37') 
-    
+    const coordinator = new SonosDevice('192.168.178.37') // Küche
+  
     // Household events - subscription to player
     if (subscriptions.topology) {
       player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
         node.send(
           [
-            { payload: data, topic: 'zoneGroup' }, 
+            // TODO replace with name
+            { payload: transformZoneData(data, '192.168.178.35'), topic: 'zoneGroup' }, 
             null,
             null
           ]
@@ -61,7 +65,7 @@ module.exports = function (RED) {
         node.send(
           [
             null, 
-            { payload: data, topic: 'avTransport' },
+            { payload: transformAvTransportData(data), topic: 'avTransport' },
             null
           ]
         )
