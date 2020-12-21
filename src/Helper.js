@@ -83,7 +83,11 @@ module.exports = {
           break
         }
       }
-      transformed.groupName = allGroupArray[foundGroupIndex].name  
+      // TODO check existens
+      transformed.groupName = allGroupArray[foundGroupIndex].name
+      transformed.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
+      transformed.coordinatorIP = allGroupArray[foundGroupIndex].coordinator.host
+      transformed.groupSize = allGroupArray[foundGroupIndex].members.length
       debug('zone >>%s', transformed.groupName)
     }
     return transformed
