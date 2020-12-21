@@ -1,3 +1,15 @@
+'use strict'
+
+/**
+ * The basic module to handle all notification for a player and its group.
+ *
+ * @module Helpers
+ * 
+ * @author Henning Klages
+ * 
+ * @since 2020-12-21
+*/
+
 const { SonosEvents } = require('@svrooij/sonos/lib')
 const SonosDevice = require('@svrooij/sonos').SonosDevice
 const ServiceEvents = require('@svrooij/sonos').ServiceEvents
@@ -5,14 +17,15 @@ const ServiceEvents = require('@svrooij/sonos').ServiceEvents
 const { transformAvTransportData, transformZoneData
 } = require('./Helper.js')
 
+const debug = require('debug')('nrcse:notifiy')
+
 module.exports = function (RED) {
-  'use strict'
 
   /** Create event node base on configuration and send messages
    * @param  {object} config current node configuration data
    */
-  function SonosNotifyNode (config) {
-  
+  function sonosNotifyNode (config) {
+    debug('method >>%s', 'sonosNotifyNode')
     RED.nodes.createNode(this, config)
    
     // clear node status, get data from dialog
@@ -25,7 +38,7 @@ module.exports = function (RED) {
       volume: config.volumeEvent,
       groupVolume: config.groupVolumeEvent
     }
-    
+
     // create new player from input such as 192.168.178.35 -Bad 
     const playerHostname = config.playerHostname.split('::')[0]
     const player = new SonosDevice(playerHostname)
@@ -42,7 +55,7 @@ module.exports = function (RED) {
     //   })
     //   .catch(console.error)
     const coordinator = new SonosDevice('192.168.178.37') // Küche
-  
+
     // Household events - subscription to player
     if (subscriptions.topology) {
       player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
@@ -117,7 +130,7 @@ module.exports = function (RED) {
 
   }
 
-  RED.nodes.registerType('sonosevents-notify', SonosNotifyNode)
+  RED.nodes.registerType('sonosevents-notify', sonosNotifyNode)
 
   async function cancelSubscriptions (player, coordinator, subscriptions, callback) {
     // topology: config.topologyEvent,

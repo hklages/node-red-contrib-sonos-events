@@ -15,6 +15,7 @@ const debug = require('debug')('nrcse:Helper')
 module.exports = {
 
   transformAvTransportData: (data) => {
+    debug('method >>%s', 'transformAvTransportData')
 
     const transformed = { 'raw': data } // keep the original data
 
@@ -57,6 +58,7 @@ module.exports = {
   },
 
   transformGroupRenderingData: (data) => {
+    debug('method >>%s', 'transformGroupRenderingData')
     const transformed = { 'raw': data }
     if (module.exports.isValidProperty(data, ['GroupMute'])) {
       transformed.groupMute = (data.GroupMute ? 'on' : 'Off')
@@ -66,6 +68,7 @@ module.exports = {
   },
 
   transformZoneData: (data, playerIp) => {
+    debug('method >>%s', 'transformZoneData')
     // TODO async an throw execption when no player found
     const transformed = { 'raw': data }
     if (module.exports.isValidProperty(data, ['ZoneGroupState'])) {
@@ -83,7 +86,7 @@ module.exports = {
           break
         }
       }
-      // TODO check existens
+      // TODO check existence
       transformed.groupName = allGroupArray[foundGroupIndex].name
       transformed.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
       transformed.coordinatorIP = allGroupArray[foundGroupIndex].coordinator.host
@@ -93,9 +96,19 @@ module.exports = {
     return transformed
   },
 
+  /** Returns the internal source of a AVTransportURI. 
+   * 
+   * @param  {string} avTransportUri such as "x-rincon-queue:RINCON_5CAAFD00223601400#0" 
+   * from AVTransport, Media Data, property CurrentURI or event AVTransportURI
+   * 
+   * @returns {string} any of stream, queue, tv, joiner, lineIn, app
+   * 
+   * @throws nothing
+   */
   internalSource: (avTransportUri) => {
-    // TODO arg is string and not empty
+    debug('method >>%s', 'internalSource')
 
+    // TODO arg is string and not empty
     let source = 'stream' // default
     if (avTransportUri.startsWith('x-rincon-queue:')) {
       source = 'queue'
@@ -112,27 +125,31 @@ module.exports = {
     return source
   },
 
+  /** Decodes some HTML special characters such as &lt; and others. 
+   * @param  {string} htmlData the string to be decodes
+   * 
+   * @returns {string} decodes string
+   * 
+   * @throws nothing
+   */
   decodeHtml: (htmlData) => {
-    // TODO arg is string
-    let decoded = htmlData
-    if (htmlData.length >= '&lt;'.length) {
-      decoded = htmlData.replace(/&lt;|&gt;|&amp;|&apos;|&quot;/g, substring => {
-        switch (substring) {
-        case '&lt;': return '<'
-        case '&gt;': return '>'
-        case '&amp;': return '&'
-        case '&apos;': return '`'
-        case '&quot;': return '"'
-        }
-      })
-    } 
+    debug('method >>%s', 'decodeHtml')
+    // TODO throw error if not string!
+    const decoded = String(htmlData).replace(/&lt;|&gt;|&amp;|&apos;|&quot;/g, (substring) => {
+      switch (substring) {
+      case '&lt;': return '<'
+      case '&gt;': return '>'
+      case '&amp;': return '&'
+      case '&apos;': return '´'
+      case '&quot;': return '"'
+      }
+    })
     
     return decoded
   },
       
   /** Validates whether property is safely accessible and "truthy". Empty string allowed.
    * truthy means not undefined, null, NaN, infinite - see method isTruthy.
-   * 
    * @param  {object} nestedObj object
    * @param  {array<string>} path property chain- must not be empty
    * 
