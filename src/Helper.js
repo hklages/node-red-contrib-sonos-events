@@ -37,6 +37,9 @@ module.exports = {
       debug('album >>%s', data.CurrentTrackMetaData.Album)
       transformed.album = module.exports.decodeHtml(data.CurrentTrackMetaData.Album)
     }
+    if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
+      transformed.artUri = module.exports.decodeHtml(data.CurrentTrackMetaData.AlbumArtUri)
+    }
     if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'Title'])) {
       transformed.station = module.exports.decodeHtml(data.EnqueuedTransportURIMetaData.Title)
       debug('station >>%s', transformed.station)
@@ -67,9 +70,9 @@ module.exports = {
     return transformed
   },
 
-  transformZoneData: (data, playerIp) => {
+  transformZoneData: (data, playerHostname) => {
     debug('method >>%s', 'transformZoneData')
-    // TODO async an throw execption when no player found
+    // TODO async an throw exeception when no player found
     const transformed = { 'raw': data }
     if (module.exports.isValidProperty(data, ['ZoneGroupState'])) {
       const allGroupArray = data.ZoneGroupState
@@ -77,7 +80,7 @@ module.exports = {
       let foundGroupIndex = -1
       for (let iGroups = 0; iGroups < allGroupArray.length; iGroups++) {
         for (let iMembers = 0; iMembers < allGroupArray[iGroups].members.length; iMembers++) {
-          if (playerIp === allGroupArray[iGroups].members[iMembers].host) {
+          if (playerHostname === allGroupArray[iGroups].members[iMembers].host) { // host = hostname
             foundGroupIndex = iGroups
             break
           }
@@ -89,9 +92,11 @@ module.exports = {
       // TODO check existence
       transformed.groupName = allGroupArray[foundGroupIndex].name
       transformed.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
-      transformed.coordinatorIP = allGroupArray[foundGroupIndex].coordinator.host
+      transformed.coordinatorHostname = allGroupArray[foundGroupIndex].coordinator.host
       transformed.groupSize = allGroupArray[foundGroupIndex].members.length
-      debug('zone >>%s', transformed.groupName)
+      transformed.groupMemberNames = allGroupArray[foundGroupIndex].members.map((member) => {
+        return member.name // as this name comes from sonos-ts 
+      })
     }
     return transformed
   },
@@ -126,7 +131,7 @@ module.exports = {
   },
 
   /** Decodes some HTML special characters such as &lt; and others. 
-   * @param  {string} htmlData the string to be decodes
+   * @param  {string} htmlData the string to be decode
    * 
    * @returns {string} decodes string
    * 
@@ -134,7 +139,6 @@ module.exports = {
    */
   decodeHtml: (htmlData) => {
     debug('method >>%s', 'decodeHtml')
-    // TODO throw error if not string!
     const decoded = String(htmlData).replace(/&lt;|&gt;|&amp;|&apos;|&quot;/g, (substring) => {
       switch (substring) {
       case '&lt;': return '<'

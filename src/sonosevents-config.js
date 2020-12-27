@@ -4,23 +4,19 @@ const debug = require('debug')('nrcse:config')
 
 module.exports = function (RED) {
 
-  let node = {} // used for sending node.error, node.debug
-
-  function sonosEventNode (config) {
+  function sonosEventsConfigNode (config) {
     debug('method >>%s', 'sonosEventNode')
     RED.nodes.createNode(this, config)
 
-    node = this
-    node.listenerHostname = config.listenerHostname
-    node.listenerPort = config.listenerPort
-
-    // set env variable - if changed, needs a restart!
-    process.env.SONOS_LISTENER_HOST = node.listenerHostname
-    process.env.SONOS_LISTENER_PORT = node.listenerPort
-
-    // TODO this is not working - maybe because node.JS is already started!
-    process.env.DEBUG = 'nrcse:*'
+    if (config.listenerHostname) {
+      process.env.SONOS_LISTENER_HOST = config.listenerHostname
+      debug('listener modified - new hostname >>%s', config.listenerHostname)
+    }
+    
+    if (config.listenerPort) {
+      process.env.SONOS_LISTENER_PORT = config.listenerPort
+      debug('listener modified - new port >>%s', config.listenerPort)
+    }
   }
-
-  RED.nodes.registerType('sonosevents-config', sonosEventNode)
+  RED.nodes.registerType('sonosevents-config', sonosEventsConfigNode)
 }

@@ -13,11 +13,12 @@
       },
       listenerHostname: {
         value: '',
-        required: true
       },
       listenerPort: {
-        value: '6393',
-        required: true
+        value: '',
+      },
+      debugOn: {
+        value: false,
       }
     },
     label: function() {
@@ -28,19 +29,26 @@
 
 <!-- Setting design and inputs for node panel (HTML)-->
 <script type="text/html" data-template-name="sonosevents-config">
+  <div class="form-tips">
+    Any change needs: first a deploy and then a Node-RED restart.<br>
+    <br>
+    In simple situations (only one network device in the same network as the speakers) it just picks the first IP from the first network device found.
+    <br>
+    Default port is 6329.<br>
+  </div>
+  <br>
+  <div class="form-row">
+    <label for="node-config-input-listenerHostname" style="width: 30%;"><i class="fa fa-globe"></i> Listener hostname</label>
+    <input type="text" id="node-config-input-listenerHostname" placeholder="use default" style="width: auto;">
+  </div>
 
-Listener is the system where NodeRED is running.
-<br>
-Needs a Node-RED restart to become active.
-<br>
-<br>
-<div class="form-row">
-    <label for="node-config-input-listenerHostname" style="width:50%"><i class="fa fa-globe"></i> Listener IP Address</label>
-    <input type="text" id="node-config-input-listenerHostname" placeholder="192.168.xx.xx" style="width:40%">
-</div>
+  <div class="form-row">
+   <label for="node-config-input-listenerPort" style="width: 30%;"><i class="fa fa-globe"></i> Listener port</label>
+    <input type="text" id="node-config-input-listenerPort" placeholder="use default" style="width: auto;">
+  </div>
 
-<div class="form-row">
-  <label for="node-config-input-listenerPort" style="width:50%"><i class="fa fa-globe"></i> Listener port</label>
-  <input type="text" id="node-config-input-listenerPort" style="width:40%">
-</div>
+  <div class="form-row">
+    <label for="node-input-debugOn" style="width: 30%;"> Debugging enabled</label>
+    <input type="checkbox" id="node-input-debugOn" style="width: auto;">
+  </div>
 </script>

@@ -14,26 +14,31 @@ const { SonosEvents } = require('@svrooij/sonos/lib')
 const SonosDevice = require('@svrooij/sonos').SonosDevice
 const ServiceEvents = require('@svrooij/sonos').ServiceEvents
 const SonosDeviceDiscovery = require('@svrooij/sonos').SonosDeviceDiscovery
-const parser = require('fast-xml-parser')
-const { DecodeAndParseXml } = require('@svrooij/sonos/lib/helpers/xml-helper')
 
-const { transformAvTransportData, transformZoneData, decodeHtml
+// TODO shall I use that - did not work
+// const { DecodeAndParseXml } = require('@svrooij/sonos/lib/helpers/xml-helper')
+
+const { transformAvTransportData, transformZoneData,
 } = require('./Helper.js')
+
+const { getGroupsAllFast, extractGroup
+} = require('./Sonos-Commands.js')
 
 const debug = require('debug')('nrcse:notifiy')
 
 module.exports = function (RED) {
 
-  /** Create event node base on configuration and send messages
+  /** Create event node notification based on configuration and send messages
    * @param  {object} config current node configuration data
    */
-  function sonosNotifyNode (config) {
-    debug('method >>%s', 'sonosNotifyNode')
+  function sonosEventsNotifyNode (config) {
+    debug('method >>%s', 'sonosEventsNotifyNode')
     RED.nodes.createNode(this, config)
    
     // clear node status, get data from dialog
     const node = this
     node.status({})
+
     const subscriptions = {
       topology: config.topologyEvent,
       track: config.trackEvent,
@@ -44,80 +49,84 @@ module.exports = function (RED) {
 
     // create new player from input such as 192.168.178.35
     const player = new SonosDevice(config.playerHostname)
-    player.LoadDeviceData()
-    
-    // for group action we always need the coordinator
-    // the coordinator may change over the time
-    // TODO How to maintain these changes
-    // player.LoadDeviceData()
-    //   .then(success => {
-    //     // TODO extract the coordinator for given player
-    //     console.log(JSON.stringify(success))
-    //     console.log('coordinator>' + player.coordinator)
-    //   })
-    //   .catch(console.error)
-    const coordinator = new SonosDevice('192.168.178.37') // Küche
+    manageSubscriptionsAndEmit(node, subscriptions, player)
+      .then((success) => {
+        debug('success >>%s', JSON.stringify(success))  
+      })
+      .catch((error) => {
+        // TOOD HAs objectproppertiy
+        node.status({ fill: 'red', shape: 'ring', text: 'not connected' })
+        debug('error >>%s', JSON.stringify(error))
+      })
 
-    if (subscriptions.topology) {
-      player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
+  }
+  RED.nodes.registerType('sonosevents-notify', sonosEventsNotifyNode)
+
+  async function manageSubscriptionsAndEmit (node, subscriptions, player) {
+    
+    const allGroups = await getGroupsAllFast(player) 
+    const  playersGroup = await extractGroup(player.host, allGroups) 
+    const coordinatorUrl = playersGroup.members[playersGroup.coordinatorIndex].url
+
+    // will be kept current!
+    let coordinator = new SonosDevice(coordinatorUrl.hostname)
+    let groupMemberNames = playersGroup.members.map((member) => {
+      return member.playerName
+    })
+    debug('Group members >>%s', JSON.stringify(groupMemberNames))
+    debug('Initial coordinatorUrl >>%s', coordinator.host)
+
+    // household events - subscribe to player
+    player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
+      debug('zone group received %s', subscriptions.topology)
+      const transformed = transformZoneData(data, player.host)
+      if (subscriptions.topology) {  
         node.send(
           [
-            // TODO replace with name
-            { payload: transformZoneData(data, '192.168.178.35'), topic: 'zoneGroup' }, 
+            // eslint-disable-next-line max-len
+            { 'payload': transformed, 'topic': 'household/ZoneGroupTopologyService' }, 
             null,
             null
           ]
-        )
-      })
-      this.status({ fill: 'green', shape: 'ring', text: 'connected' })
-      node.log('subscribed to ZoneGroupTopology')
-    }
+        )  
+      }
+      
+      // act if coordinator is different
+      if (transformed.groupMemberNames[0] !== groupMemberNames[0]) {
+        // new coordinator
+        debug('new coordinator - modify group subscriptions >>%s', transformed.coordinatorHostname)
+        coordinator = new SonosDevice(transformed.coordinatorHostname)
+        groupMemberNames = transformed.groupMemberNames.slice()
+        //cancelGroupSubscriptions()
+        //  .then()
+        //  .catch()
 
-    // group events - subscription to coordinator
-    if (subscriptions.track) {
-      coordinator.AVTransportService.Events.on(ServiceEvents.Data, data => {
-        node.send(
-          [
-            null, 
-            { payload: transformAvTransportData(data), topic: 'avTransport' },
-            null
-          ]
-        )
-      })
-      this.status({ fill: 'green', shape: 'ring', text: 'connected' })
-      node.log('subscribed to AVTransport')
-    }
-    if (subscriptions.groupMute || subscriptions.groupVolume) {
-      coordinator.GroupRenderingControlService.Events.on(ServiceEvents.Data, data => {
-        node.send(
-          [
-            null, 
-            { payload: data, topic: 'groupRendering' },
-            null
-          ]
-        )
-      })
-      this.status({ fill: 'green', shape: 'ring', text: 'connected' })
-      node.log('subscribed to GroupMute/GroupVolume')
-    }
-    
-    // // player events - subscribe to player
+        // implementGroupSubscriptions()
+        //   .then()
+        //   .catch()
+      }
+    })
+    debug('subscribed to ZoneGroupTopology')
+
+    // group events - subscribe coordinator
+    await implementGroupSubscriptions(node, coordinator, subscriptions, groupMemberNames)
+
+    // player events - subscribe to player
     if (subscriptions.volume) {
       player.Events.on(SonosEvents.Volume, mute => {
         node.send(
           [
             null,
             null,
-            { payload: mute, topic: 'volume' },
+            { 'payload': mute, 'topic': `player/${player.host}/volume` },
           ]
         )
       })
-      node.log('subscribed to Volume')
-      node.status({ fill: 'green', shape: 'ring', text: 'connected' })
+      debug('subscribed to Volume')
     }
-
+    
     node.on('close', function (done) {
-      cancelSubscriptions(player, coordinator, subscriptions, function () {
+      cancelAllSubscriptions(player, coordinator, subscriptions, function () {
         done()
       })
         .then(() => {
@@ -129,26 +138,52 @@ module.exports = function (RED) {
         })
     })
 
+    return true
   }
 
-  RED.nodes.registerType('sonosevents-notify', sonosNotifyNode)
+  async function implementGroupSubscriptions (node, coordinator, subscriptions, groupMemberNames) {
+    if (subscriptions.track) {
+      coordinator.AVTransportService.Events.on(ServiceEvents.Data, data => {
+        node.send(
+          [
+            null, 
+            // eslint-disable-next-line max-len
+            { 'payload': transformAvTransportData(data), 'topic': `groups/${coordinator.host}/AVTransportService`, groupMemberNames },
+            null
+          ]
+        )
+      })
+      debug('subscribed to group.AVTransport')
+    }
 
-  async function cancelSubscriptions (player, coordinator, subscriptions, callback) {
+    if (subscriptions.groupMute || subscriptions.groupVolume) {
+      coordinator.GroupRenderingControlService.Events.on(ServiceEvents.Data, data => {
+        node.send(
+          [
+            null, 
+            // eslint-disable-next-line max-len
+            { 'payload': data, 'topic': `groups/${coordinator.host}/GroupRenderingControlService`, groupMemberNames },
+            null
+          ]
+        )
+      })
+      debug('subscribed to group.GroupRenderingControlSerivice')
+    }
+  }
+
+  async function cancelAllSubscriptions (player, coordinator, subscriptions, callback) {
     // topology: config.topologyEvent,
+
     // track: config.trackEvent,
     // groupMute: config.groupMuteEvent,
+    
     // volume: config.volumeEvent
 
     if (subscriptions.topology) {
       await player.ZoneGroupTopologyService.Events.removeAllListeners(ServiceEvents.Data)
     }
-    if (subscriptions.track) {
-      await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvents.Data) 
-    }
-    if (subscriptions.groupMute) {
-      // eslint-disable-next-line max-len
-      await coordinator.GroupRenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
-    }
+    
+    await cancelGroupSubscriptions(coordinator, subscriptions)
     
     if (subscriptions.volume) {
       await player.RenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
@@ -156,21 +191,23 @@ module.exports = function (RED) {
     callback()
   }
 
-  // Build API to auto detect IP Addresses
+  async function cancelGroupSubscriptions (coordinator, subscriptions) {
+    if (subscriptions.track) {
+      await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvents.Data) 
+    }
+    // Caution: if there is another node wit a player in the same group that is also canceled
+    if (subscriptions.groupMute || subscriptions.groupVolume) {
+      // eslint-disable-next-line max-len
+      await coordinator.GroupRenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
+    }
+  }
+
+  // API to get list of available players
   RED.httpNode.get('/nrcse/searchDevices', function (req, response) {
       
-    //TODO remove or complete 
     discoverAllPlayer()
-      .then((success) => {
-        response.json(success.ZoneGroupState.ZoneGroups.ZoneGroup)
-        
-        // response.json(
-        //   [
-        //     { 'label': 'Küche', 'value': '192.168.178.37' },
-        //     { 'label': 'Wohnzimmer', 'value': '192.168.178.36' },
-        //     { 'label': 'Bad', 'value': '192.168.178.35' }
-        //   ]
-        // )
+      .then((playerList) => {
+        response.json(playerList)
       })
       .catch((error) => {
         // TODO use special strigify option
@@ -185,15 +222,14 @@ module.exports = function (RED) {
     const deviceDiscovery = new SonosDeviceDiscovery()
     const firstPlayerData = await deviceDiscovery.SearchOne(1)
     const firstPlayer = new SonosDevice(firstPlayerData.host)
-    const allZones = await firstPlayer.GetZoneGroupState()
-    // TODO should also be async to return error codes
-    const decoded = decodeHtml(allZones.ZoneGroupState)
-    const attributeNamePrefix = '_'
-    const options = { ignoreAttributes: false, attributeNamePrefix }
-    // TODO we have to make single entries to array for groups and members!!!!!!!
-    const finaldecoded = await parser.parse(decoded, options)
-    //const finaldecoded = DecodeAndParseXml(allZones.ZoneGroupState)
-    return finaldecoded
+    const allGroups = await getGroupsAllFast(firstPlayer)
+    const flatList = [].concat.apply([], allGroups)
+    const reducedList = flatList.map((item) => {
+      return {
+        'label': item.playerName,
+        'value': item.url.hostname
+      }
+    })
+    return reducedList
   }
-
 }

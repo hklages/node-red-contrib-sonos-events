@@ -13,7 +13,7 @@
         required: true
       },
       topologyEvent: { 
-        value: false
+        value: true
       },
       trackEvent: { 
         value: false
@@ -27,27 +27,46 @@
       volumeEvent: { 
         value: false
       },
-      outputs: { value: 3 },
+      outputs: { 
+        value: 3
+      }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#e8640c',
-    paletteLabel: 'sonosevents',
+    paletteLabel: 'sonos events',
     label: function() {
       return 'events';
     },
     oneditprepare: function() {      
-      const playerList = [
-        {name: "192.168.178.37::Küche"},
-        {name: "192.168.178.36::Bad"},
-        {name: "192.168.178.35::Wohnzimmer"}
-      ]    
-      // set up playerlist
-      for (var i = 0; i < playerList.length; i++) {
-        $('#node-input-playerHostname').append($('<option></option>').attr('value', playerList[i].name).text(playerList[i].name))
-      }
-      // selected playerHostname
-      $('#node-input-playerHostname').val(this.playerHostname)
+      try {
+        $('#node-input-playerHostname').autocomplete('destroy')
+      } catch (err) {}
+      
+      $('#node-lookup-playerHostname').click(function() {
+        $('#node-lookup-playerHostname-icon').removeClass('fa-search')
+        $('#node-lookup-playerHostname-icon').addClass('spinner')
+        $('#node-input-playerHostname').addClass('disabled')
+        $.getJSON('/nrcse/searchDevices', function(sonosPlayer) {
+          $('#node-lookup-playerHostname-icon').addClass('fa-search')
+          $('#node-lookup-playerHostname-icon').removeClass('spinner')
+          $('#node-lookup-playerHostname').removeClass('disabled')
+          var dataArray = [];
+          $.each(sonosPlayer, function(i, element) {
+            dataArray.push(element)
+          });
+          $('#node-input-playerHostname')
+            .autocomplete({
+              source: dataArray,
+              minLength: 0,
+              close: function(event, ui) {
+                $('#node-input-playerHostname').autocomplete('destroy')
+              }
+            })
+            .autocomplete('search', '')
+        })
+      })
+    
     }, 
     oneditsave: function() {
       // currently nothing
@@ -60,59 +79,71 @@
 
 <!-- Setting design and inputs for node panel (HTML)-->
 <script type="text/html" data-template-name="sonosevents-notify">
+  <style>
+    label.event-checkbox {
+        display: block !important;
+        width: auto !important;
+    }
+    label.event-checkbox input {
+        width: auto !important;
+        margin-top: -3px !important;
+    }
+  </style>
+  
+  
   <div id="main-props">
     <!-- Config node -->
     <div class="form-row">
-      <label for="node-input-confignode" style="width:25%"> Config Node</label>
-      <input type="text" id="node-input-confignode" style="width: auto"></select>
+      <label for="node-input-confignode" style="width: 25%;"><i class="fa fa-gear"></i> Config Node</label>
+      <input type="text" id="node-input-confignode" style="width: auto;">
     </div>
 
     <!-- SONOS player hostname -->
     <div class="form-row">
-      <label for="node-input-playerHostname" style="width:35%"><i class="fa fa-tasks"></i> Player Hostname</label>
-      <select id="node-input-playerHostname" style="width: auto"></select>
+      <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player hostname</label>
+      <input type="text" id="node-input-playerHostname" style="width: auto;" placeholder="192.168.x.x">
+      <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
     </div>
-
-    What changes on the SONOS systems should be output?
+    
+    <!-- Events-->
     <div class="form-row">
-      <label for="node-input-topologyEvent" style="width:35%"> Topology </label>
-      <input type="checkbox" id="node-input-topologyEvent" style="display: inline-block; width: auto; vertical-align: top;"/>
+      <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
+      <div style="width: auto; display: inline-block; vertical-align: text-top;">
+          <label class="event-checkbox"><input type="checkbox" id="node-input-topologyEvent" disabled> Topology (household) </label>
+          <br>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-trackEvent" > Track (group)</label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-groupMuteEvent"> Group Mute (group)</label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-groupVolumeEvent"> Group Volume (group)</label>
+          <br>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-volumeEvent"> Volume</label>
+      </div>
     </div>
-
-    <div class="form-row">
-      <label for="node-input-trackEvent" style="width:35%"> Track</label>
-      <input type="checkbox" id="node-input-trackEvent" style="display: inline-block; width: auto; vertical-align: top;"/>
+    <div class="form-tips">
+    This node always subscribes to ZoneGroupTopologyService events and to selected other out of above list.
     </div>
-
-    <div class="form-row">
-      <label for="node-input-groupMuteEvent" style="width:35%"> Group mute</label>
-      <input type="checkbox" id="node-input-groupMuteEvent" style="display: inline-block; width: auto; vertical-align: top;"/>
-    </div>
-
-    <div class="form-row">
-      <label for="node-input-volumeEvent" style="width:35%"> Player volume</label>
-      <input type="checkbox" id="node-input-volumeEvent" style="display: inline-block; width: auto; vertical-align: top;"/>
-    </div>
-
-    <div class="form-row">
-      <label for="node-input-groupVolumeEvent" style="width:35%"> Group volume</label>
-      <input type="checkbox" id="node-input-groupVolumeEvent" style="display: inline-block; width: auto; vertical-align: top;"/>
-    </div>
-
+    <br>
     <!-- Amount of outputs -->
     <div class="form-row">
-      <label for="node-input-outputs" style="width:35%"><i class="fa fa-tag"></i> Nb of outputs</label>
+      <label for="node-input-outputs" style="width: 25%;"><i class="fa fa-sign-out"></i> Outputs</label>
       <input type="text" id="node-input-outputs" placeholder="1" style="width: auto"/>
     </div>
 
     <!-- Node name -->
     <div class="form-row">
-      <label for="node-input-name" style="width:35%"><i class="fa fa-tag"></i> Name</label>
+      <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="This node name" style="width: auto"/>
     </div>
+    <br>
+    <div class="form-tips" id="node-tip">
+     Some additional information.<br>
+     See help for more available options.
+    </div>
+  
     <!-- Dialog help -->
     
   </div>
+
+
 </script>
 
 <!-- Help text (HTML) -->
