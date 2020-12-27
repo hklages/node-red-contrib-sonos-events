@@ -13,8 +13,11 @@
 const { SonosEvents } = require('@svrooij/sonos/lib')
 const SonosDevice = require('@svrooij/sonos').SonosDevice
 const ServiceEvents = require('@svrooij/sonos').ServiceEvents
+const SonosDeviceDiscovery = require('@svrooij/sonos').SonosDeviceDiscovery
+const parser = require('fast-xml-parser')
+const { DecodeAndParseXml } = require('@svrooij/sonos/lib/helpers/xml-helper')
 
-const { transformAvTransportData, transformZoneData
+const { transformAvTransportData, transformZoneData, decodeHtml
 } = require('./Helper.js')
 
 const debug = require('debug')('nrcse:notifiy')
@@ -39,9 +42,8 @@ module.exports = function (RED) {
       groupVolume: config.groupVolumeEvent
     }
 
-    // create new player from input such as 192.168.178.35 -Bad 
-    const playerHostname = config.playerHostname.split('::')[0]
-    const player = new SonosDevice(playerHostname)
+    // create new player from input such as 192.168.178.35
+    const player = new SonosDevice(config.playerHostname)
     player.LoadDeviceData()
     
     // for group action we always need the coordinator
@@ -56,7 +58,6 @@ module.exports = function (RED) {
     //   .catch(console.error)
     const coordinator = new SonosDevice('192.168.178.37') // Küche
 
-    // Household events - subscription to player
     if (subscriptions.topology) {
       player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
         node.send(
@@ -154,4 +155,45 @@ module.exports = function (RED) {
     }
     callback()
   }
+
+  // Build API to auto detect IP Addresses
+  RED.httpNode.get('/nrcse/searchDevices', function (req, response) {
+      
+    //TODO remove or complete 
+    discoverAllPlayer()
+      .then((success) => {
+        response.json(success.ZoneGroupState.ZoneGroups.ZoneGroup)
+        
+        // response.json(
+        //   [
+        //     { 'label': 'Küche', 'value': '192.168.178.37' },
+        //     { 'label': 'Wohnzimmer', 'value': '192.168.178.36' },
+        //     { 'label': 'Bad', 'value': '192.168.178.35' }
+        //   ]
+        // )
+      })
+      .catch((error) => {
+        // TODO use special strigify option
+        debug(JSON.stringify(error))
+      })
+  })
+
+  async function discoverAllPlayer () {
+    // discover the first one an get all others because we need also the player names
+    // and thats very reliable -determinstic. Discovering 10 player might be time consuming
+    // Sonos player knews best the topology
+    const deviceDiscovery = new SonosDeviceDiscovery()
+    const firstPlayerData = await deviceDiscovery.SearchOne(1)
+    const firstPlayer = new SonosDevice(firstPlayerData.host)
+    const allZones = await firstPlayer.GetZoneGroupState()
+    // TODO should also be async to return error codes
+    const decoded = decodeHtml(allZones.ZoneGroupState)
+    const attributeNamePrefix = '_'
+    const options = { ignoreAttributes: false, attributeNamePrefix }
+    // TODO we have to make single entries to array for groups and members!!!!!!!
+    const finaldecoded = await parser.parse(decoded, options)
+    //const finaldecoded = DecodeAndParseXml(allZones.ZoneGroupState)
+    return finaldecoded
+  }
+
 }
