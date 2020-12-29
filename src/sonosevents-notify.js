@@ -12,7 +12,7 @@
 
 const { SonosEvents } = require('@svrooij/sonos/lib')
 const SonosDevice = require('@svrooij/sonos').SonosDevice
-const ServiceEvents = require('@svrooij/sonos').ServiceEvents
+const ServiceEvent  = require('@svrooij/sonos').ServiceEvents
 const SonosDeviceDiscovery = require('@svrooij/sonos').SonosDeviceDiscovery
 
 // TODO shall I use that - did not work
@@ -52,11 +52,11 @@ module.exports = function (RED) {
     manageSubscriptionsAndEmit(node, subscriptions, player)
       .then((success) => {
         debug('success >>%s', JSON.stringify(success))  
+        node.status({ fill: 'green', shape: 'ring', text: 'connected' })
       })
       .catch((error) => {
-        // TOOD HAs objectproppertiy
         node.status({ fill: 'red', shape: 'ring', text: 'not connected' })
-        debug('error >>%s', JSON.stringify(error))
+        node.debug('error >>' + JSON.stringify(error, Object.getOwnPropertyNames(error)))
       })
 
   }
@@ -77,7 +77,7 @@ module.exports = function (RED) {
     debug('Initial coordinatorUrl >>%s', coordinator.host)
 
     // household events - subscribe to player
-    player.ZoneGroupTopologyService.Events.on(ServiceEvents.Data, data => { 
+    player.ZoneGroupTopologyService.Events.on(ServiceEvent.Data, data => { 
       debug('zone group received %s', subscriptions.topology)
       const transformed = transformZoneData(data, player.host)
       if (subscriptions.topology) {  
@@ -90,13 +90,14 @@ module.exports = function (RED) {
           ]
         )  
       }
-      
+
       // act if coordinator is different
       if (transformed.groupMemberNames[0] !== groupMemberNames[0]) {
         // new coordinator
         debug('new coordinator - modify group subscriptions >>%s', transformed.coordinatorHostname)
         coordinator = new SonosDevice(transformed.coordinatorHostname)
         groupMemberNames = transformed.groupMemberNames.slice()
+        debug('new group name array >>%s', JSON.stringify(groupMemberNames))
         //cancelGroupSubscriptions()
         //  .then()
         //  .catch()
@@ -107,6 +108,30 @@ module.exports = function (RED) {
       }
     })
     debug('subscribed to ZoneGroupTopology')
+
+    player.AlarmClockService.Events.on(ServiceEvent.data, data => {
+      debug('alarm service received')
+      node.send(
+        [
+          // eslint-disable-next-line max-len
+          { 'payload': data, 'topic': 'household/AlarmClockService' }, 
+          null,
+          null
+        ]
+      )  
+    })
+
+    player.ContentDirectoryService.Events.on(ServiceEvent.Data, data => {
+      debug('content directory service received')
+      node.send(
+        [
+          // eslint-disable-next-line max-len
+          { 'payload': data, 'topic': 'household/ContentDirectoryService' }, 
+          null,
+          null
+        ]
+      )  
+    })
 
     // group events - subscribe coordinator
     await implementGroupSubscriptions(node, coordinator, subscriptions, groupMemberNames)
@@ -140,10 +165,9 @@ module.exports = function (RED) {
 
     return true
   }
-
   async function implementGroupSubscriptions (node, coordinator, subscriptions, groupMemberNames) {
     if (subscriptions.track) {
-      coordinator.AVTransportService.Events.on(ServiceEvents.Data, data => {
+      coordinator.AVTransportService.Events.on(ServiceEvent.data, data => {
         node.send(
           [
             null, 
@@ -157,7 +181,7 @@ module.exports = function (RED) {
     }
 
     if (subscriptions.groupMute || subscriptions.groupVolume) {
-      coordinator.GroupRenderingControlService.Events.on(ServiceEvents.Data, data => {
+      coordinator.GroupRenderingControlService.Events.on(ServiceEvent.Data, data => {
         node.send(
           [
             null, 
@@ -180,25 +204,25 @@ module.exports = function (RED) {
     // volume: config.volumeEvent
 
     if (subscriptions.topology) {
-      await player.ZoneGroupTopologyService.Events.removeAllListeners(ServiceEvents.Data)
+      await player.ZoneGroupTopologyService.Events.removeAllListeners(ServiceEvent.Data)
     }
     
     await cancelGroupSubscriptions(coordinator, subscriptions)
     
     if (subscriptions.volume) {
-      await player.RenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
+      await player.RenderingControlService.Events.removeAllListeners(ServiceEvent.Data)
     }
     callback()
   }
 
   async function cancelGroupSubscriptions (coordinator, subscriptions) {
     if (subscriptions.track) {
-      await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvents.Data) 
+      await coordinator.AVTransportService.Events.removeAllListeners(ServiceEvent.Data) 
     }
     // Caution: if there is another node wit a player in the same group that is also canceled
     if (subscriptions.groupMute || subscriptions.groupVolume) {
       // eslint-disable-next-line max-len
-      await coordinator.GroupRenderingControlService.Events.removeAllListeners(ServiceEvents.Data)
+      await coordinator.GroupRenderingControlService.Events.removeAllListeners(ServiceEvent.Data)
     }
   }
 

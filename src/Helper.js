@@ -27,35 +27,37 @@ module.exports = {
     }
 
     if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'Title'])) {
-      transformed.title = module.exports.decodeHtml(data.CurrentTrackMetaData.Title)
+      transformed.title = data.CurrentTrackMetaData.Title
       debug('title >>%s', transformed.title)
     }
     if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'Artist'])) {
-      transformed.artist = module.exports.decodeHtml(data.CurrentTrackMetaData.Artist)
+      transformed.artist = data.CurrentTrackMetaData.Artist
     }
+
     if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'Album'])) {
-      debug('album >>%s', data.CurrentTrackMetaData.Album)
-      transformed.album = module.exports.decodeHtml(data.CurrentTrackMetaData.Album)
+      transformed.album =data.CurrentTrackMetaData.Album
     }
     if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
-      transformed.artUri = module.exports.decodeHtml(data.CurrentTrackMetaData.AlbumArtUri)
+      transformed.artUri = data.CurrentTrackMetaData.AlbumArtUri
     }
-    if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'Title'])) {
-      transformed.station = module.exports.decodeHtml(data.EnqueuedTransportURIMetaData.Title)
-      debug('station >>%s', transformed.station)
-    }
+    
     if (module.exports.isValidProperty(data, ['TransportState'])) {
       transformed.playbackstate = data.TransportState.toLowerCase()
     }
 
     // AVTransport if exists overrules EnqueuedTransport...
-    transformed.upnpClass = ''
-    if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
-      transformed.upnpClass = data.EnqueuedTransportURIMetaData.UpnpClass
-    }
-    if (module.exports.isValidProperty(data, ['AVTransportURIMetaData', 'UpnpClass'])) {
-      transformed.upnpClass = data.AVTransportURIMetaData.UpnpClass
-    }
+    // TODO for what is this
+    // transformed.upnpClass = ''
+    // if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
+    //   transformed.upnpClass = data.EnqueuedTransportURIMetaData.UpnpClass
+    // }
+    // if (module.exports.isValidProperty(data, ['AVTransportURIMetaData', 'UpnpClass'])) {
+    //   transformed.upnpClass = data.AVTransportURIMetaData.UpnpClass
+    // }
+    // if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'Title'])) {
+    //   transformed.station = data.EnqueuedTransportURIMetaData.Title
+    //   debug('station >>%s', transformed.station)
+    // }
  
     return transformed
   },
