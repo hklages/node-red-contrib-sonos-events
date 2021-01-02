@@ -20,11 +20,13 @@ module.exports = function (RED) {
     debug('method >>%s', 'sonosEventNode')
     RED.nodes.createNode(this, config)
 
+    // TODO how to check whether changes?
     if (config.listenerHostname) {
       process.env.SONOS_LISTENER_HOST = config.listenerHostname
       debug('listener modified - new hostname >>%s', config.listenerHostname)
     }
     
+    // TODO how to check whether changes?
     if (config.listenerPort) {
       process.env.SONOS_LISTENER_PORT = config.listenerPort
       debug('listener modified - new port >>%s', config.listenerPort)
@@ -37,14 +39,13 @@ module.exports = function (RED) {
   // .......................................................................................
 
   // Endpoint to get list of available players
-  RED.httpNode.get('/nrcse/searchDevices', function (req, response) {
+  RED.httpAdmin.get('/nrcse/searchDevices', function (req, response) {
       
     discoverAllPlayer()
       .then((playerList) => {
         response.json(playerList)
       })
       .catch((error) => {
-        // TODO use special strigify option
         debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
       })
   })

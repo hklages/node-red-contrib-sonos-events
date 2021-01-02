@@ -105,20 +105,20 @@ module.exports = function (RED) {
         })
 
         if (subscriptions.content) {
-          const msg = [null, null]
+          const msg = [null, null, null, null, null]
           // eslint-disable-next-line max-len
           msg[0] = { 'payload': betterAvTransportData(raw).content, raw, 'topic': `group/${coordinator.host}/avTransport/content`, 'properties': Object.keys(raw) }
           node.send(msg)
         }
         if (subscriptions.contentCategory && betterAvTransportData(raw).contentCategory) {
-          const msg = [null, null]
-          msg[0] = { 'payload': betterAvTransportData(raw).contentCategory, raw, 'topic': `group/${coordinator.host}/avTransport/contentCategory` }
+          const msg = [null, null, null, null, null]
+          msg[1] = { 'payload': betterAvTransportData(raw).contentCategory, raw, 'topic': `group/${coordinator.host}/avTransport/contentCategory` }
           node.send(msg)   
         }
         if (subscriptions.playbackstate) {
-          const msg = [null, null]
+          const msg = [null, null, null, null, null]
           // eslint-disable-next-line max-len
-          msg[0] = { 'payload': betterAvTransportData(raw).playbackstate, raw, 'topic': `group/${coordinator.host}/avTransport/playbackstate` }
+          msg[2] = { 'payload': betterAvTransportData(raw).playbackstate, raw, 'topic': `group/${coordinator.host}/avTransport/playbackstate` }
           node.send(msg)
         }
       })
@@ -127,17 +127,18 @@ module.exports = function (RED) {
 
     if (subscriptions.groupVolume || subscriptions.groupVolume) {
       coordinator.GroupRenderingControlService.Events.on('serviceEvent', (raw) => {
-        debug('new GroupRenderingControlService arrived')
-        if (subscriptions.groupMuteState) {
-          const msg = [null, null]
+        
+        if (subscriptions.groupVolume) {
+          const msg = [null, null, null, null, null]
           // eslint-disable-next-line max-len
-          msg[1] = { 'payload': betterGroupRenderingData(raw).groupVolume, raw, 'topic': `group/${coordinator.host}/groupRenderingControl/groupVolume` }
+          msg[3] = { 'payload': betterGroupRenderingData(raw).groupMuteState, raw, 'topic': `group/${coordinator.host}/groupRenderingControl/groupMuteState` }
           node.send(msg)  
         }
-        if (subscriptions.groupVolume) {
-          const msg = [null, null]
+        debug('new GroupRenderingControlService arrived')
+        if (subscriptions.groupMuteState) {
+          const msg = [null, null, null, null, null]
           // eslint-disable-next-line max-len
-          msg[1] = { 'payload': betterGroupRenderingData(raw).groupMuteState, raw, 'topic': `group/${coordinator.host}/groupRenderingControl/groupMuteState` }
+          msg[4] = { 'payload': betterGroupRenderingData(raw).groupVolume, raw, 'topic': `group/${coordinator.host}/groupRenderingControl/groupVolume` }
           node.send(msg)  
         }
       })

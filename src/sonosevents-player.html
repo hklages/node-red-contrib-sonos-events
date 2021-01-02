@@ -28,14 +28,14 @@
         value: false
       },
       outputs: { 
-        value: 4
+        value: 5
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#FF8040',
     paletteLabel: 'player events',
-    outputLabels: ['volume, mutestate','localGroupUuid', 'lineInConnected', 'micEnabled'],
+    outputLabels: ['volume', 'mutestate','localGroupUuid', 'lineInConnected', 'micEnabled'],
     label: function() {
       return 'player events';
     },
@@ -116,14 +116,10 @@
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
-        <b>Output 1 (Service renderingControl)</b>
         <label class="event-checkbox"><input type="checkbox" id="node-input-volume"> Volume</label>  
         <label class="event-checkbox"><input type="checkbox" id="node-input-mutestate"> Mutestate </label>
-        <br><b>Output 2 (Service groupManagement)</b>
         <label class="event-checkbox"><input type="checkbox" id="node-input-localGroupUuid"> Group uuid</label>
-        <br><b>Output 3 (Service audioInService)</b>
         <label class="event-checkbox"><input type="checkbox" id="node-input-lineInConnected"> Line In is connected</label>
-        <br><b>Output 4 (Service deviceProperties)</b>
         <label class="event-checkbox"><input type="checkbox" id="node-input-micEnabled"> Microphone state</label>
       </div>
     </div>

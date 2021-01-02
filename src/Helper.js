@@ -55,7 +55,7 @@ module.exports = {
     debug('method >>%s', 'transformGroupRenderingData')
     const better = {}
     if (module.exports.isValidProperty(data, ['GroupMute'])) {
-      better.groupMuteState = (data.GroupMute ? 'on' : 'Off')
+      better.groupMuteState = (data.GroupMute ? 'on' : 'off')
       debug('groupMuteState >>%s', better.groupMuteState)
     }
     if (module.exports.isValidProperty(data, ['GroupVolume'])) {

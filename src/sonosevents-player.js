@@ -80,7 +80,7 @@ module.exports = function (RED) {
     if (subscriptions.volume) {
       player.Events.on(SonosEvents.Volume, (payload) => {
         debug('new volume event')
-        const msg = [null, null, null, null]
+        const msg = [null, null, null, null, null]
         payload = String(payload)
         msg[0] = { payload,  'topic': `player/${player.host}/renderingControl/volume` }
         node.send(msg)
@@ -91,9 +91,9 @@ module.exports = function (RED) {
     if (subscriptions.mutestate) {
       player.Events.on(SonosEvents.Mute, (payload) => {
         debug('new mute state event')
-        const msg = [null, null, null, null]
+        const msg = [null, null, null, null, null]
         payload = (payload ? 'on' : 'off')
-        msg[0] = { payload, 'topic': `player/${player.host}/renderingControl/mutestate` }
+        msg[1] = { payload, 'topic': `player/${player.host}/renderingControl/mutestate` }
         node.send(msg)
       })
       debug('subscribed to mutestate')
@@ -103,8 +103,8 @@ module.exports = function (RED) {
     if (subscriptions.localGroupUuid) {
       player.GroupManagementService.Events.on('serviceEvent', (raw) => {
         debug('new GroupManagementService event')
-        const msg = [null, null, null, null]
-        msg[1] = {
+        const msg = [null, null, null, null, null]
+        msg[2] = {
           'payload': raw.LocalGroupUUID, raw,
           'topic': `player/${player.host}/groupManagement/localGroupUuid`
         }
@@ -118,12 +118,12 @@ module.exports = function (RED) {
     if (subscriptions.lineInConnected) {
       player.AudioInService.Events.on('serviceEvent', (raw) => {
         debug('new AudioInService event')
-        const msg = [null, null, null, null]
+        const msg = [null, null, null, null, null]
         let payload = 'not available'
         if (isValidProperty(raw, ['LineInConnected'])) {
           payload = (raw.LineInConnected ? 'yes' : 'no')
         }
-        msg[2] = { payload, raw, 'topic': `player/${player.host}/audioInService/lineInConnected` }
+        msg[3] = { payload, raw, 'topic': `player/${player.host}/audioInService/lineInConnected` }
         node.send(msg)
       })
       debug('subscribed to AudioInService')
@@ -138,7 +138,7 @@ module.exports = function (RED) {
         if (isValidProperty(raw, ['MicEnabled'])) {
           payload = (raw.MicEnabled === 1 ? 'on' : 'off')
         }
-        msg[3] = { payload, raw, 'topic': `player/${player.host}/deviceProperties/micState` }
+        msg[4] = { payload, raw, 'topic': `player/${player.host}/deviceProperties/micState` }
         node.send(msg)
       })
       debug('subscribed to DevicePropertiesService')

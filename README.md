@@ -10,9 +10,12 @@
 
 A set of [Node-RED](https://nodered.org/) nodes to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 
-Intention is: Works well with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md). This package is in no way connected to or supported by Sonos Incorporation.
+Subscribe to a growing list of event types to get notifications about changes related to tracks, playback state, volume, mute state, group volume, group mute state, topology, ...
+Reduce traffic and load by subscribing only to specific players and groups.
 
-Subscribe to a growing list of events to get notifications about changes related to tracks, volume, mute state, group volume, group mute state, topology, ...
+Works (strives for well) with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md).
+
+This package is in no way connected to or supported by Sonos Incorporation.
 
 ### SUPPORT
 
@@ -34,4 +37,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 [Stephan](https://github.com/svrooij)
 
-[sonos Typescript team](https://github.com/svrooij/node-sonos-ts/blob/master/README.md) for the base API
+[sonos Typescript team](https://github.com/svrooij/node-sonos-ts/blob/master/README.md) for the API.

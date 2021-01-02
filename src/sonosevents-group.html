@@ -13,7 +13,7 @@
         required: true
       },
       content: { 
-        value: false
+        value: true
       },
       contentCategory: { 
         value: false
@@ -28,20 +28,20 @@
         value: false
       },
       ignoreTransition: { 
-        value: false
+        value: true
       },
       ignoreZpstr: { 
-        value: false
+        value: true
       },
       outputs: { 
-        value: 2
+        value: 5
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#F87217',
     paletteLabel: 'group events',
-    outputLabels: ['content, contentCategory, playbackstate','groupVolume, groupMuteState'],
+    outputLabels: ['content', 'contentCategory', 'playbackstate','groupVolume', 'groupMuteState'],
     label: function() {
       return 'group events'
     },
@@ -121,13 +121,11 @@
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          <b>Output 1 (Service avTransport)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-content" > Content </label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentCategory" > Content category </label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-playbackstate" > Playback state </label>
-          <br><b>Output 2 (Service groupRenderingControl)</b>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-groupMuteState"> Group mute state </label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-groupVolume"> Group volume </label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-groupMuteState"> Group mute state </label>
       </div>
     </div>
 

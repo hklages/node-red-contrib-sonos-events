@@ -16,9 +16,6 @@
       },
       listenerPort: {
         value: '',
-      },
-      debugOn: {
-        value: false,
       }
     },
     label: function() {
@@ -43,20 +40,15 @@
   <div class="form-tips">
     Automation: <br>
     In simple situations (only one network device in the same network as the speakers) it just picks the first IP from the first network device found.
-    <br>
+    <br><br>
     Default port is 6329.<br>
-    <br>
+    <br><br>
     RedMatic: Please set the listener name to the CCU ip address such as 192.168.178.25. Port can be default. 
     <br>
     Any change will result in creating environmental variables SONOS_LISTENER_HOST, SONOS_LISTENER_PORT and tries to set the values. 
     <br>
+    <br>
     **** RESTART OF NODE-RED MIGHT BE NECESSARY ****
 
-  </div>
-  <br>
-
-  <div class="form-row">
-    <label for="node-input-debugOn" style="width: 30%;"> Debugging enabled</label>
-    <input type="checkbox" id="node-input-debugOn" style="width: auto;">
   </div>
 </script>

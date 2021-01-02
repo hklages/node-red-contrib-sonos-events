@@ -79,7 +79,7 @@ module.exports = function (RED) {
     if (subscriptions.topology) {
       player.ZoneGroupTopologyService.Events.on('serviceEvent', (raw) => {
         debug('new ZoneGroupTopologyService event >>', JSON.stringify(raw))
-        const msg = [null, null, null]
+        const msg = [null, null, null, null, null]
         msg[0] = {
           'payload': betterZoneData(raw, player.host), raw,
           'topic': `household/${player.host}/zoneGroupTopology/topology`
@@ -93,8 +93,8 @@ module.exports = function (RED) {
     if (subscriptions.alarmList) {
       player.AlarmClockService.Events.on('serviceEvent', (raw) => {
         debug('new AlarmClockService event >>', JSON.stringify(raw))
-        const msg = [null, null, null] 
-        msg[2] = {
+        const msg = [null, null, null, null, null]
+        msg[1] = {
           'payload': raw,
           'topic': `household/${player.host}/alarmClock/alarmList`
         }
@@ -119,31 +119,31 @@ module.exports = function (RED) {
       || subscriptions.contentSonosPlaylists) {
       player.ContentDirectoryService.Events.on('serviceEvent', raw => {
         debug('new ContentDirectoryService event >>', JSON.stringify(raw))
-       
-        if (raw.SavedQueuesUpdateID && subscriptions.contentSonosPlaylists) {
-          const msg = [null, null, null]
-          msg[2] = {
-            'payload': raw.SavedQueuesUpdateID, raw,
-            'topic': `household/${player.host}/ContentDirectory/contentSonosPlaylists`
-          }
-          node.send(msg)
-        }
-        if (raw.ShareListUpdateID && subscriptions.contentMusicLibrary) {
-          const msg = [null, null, null]
-          msg[2] = {
-            'payload': raw.ShareListUpdateID, raw,
-            'topic': `household/${player.host}/ContentDirectory/contentMusicLibrary`
-          }
-          node.send(msg)
-        }
         if (raw.FavoritesUpdateID && subscriptions.contentMySonos) {
-          const msg = [null, null, null]
+          const msg = [null, null, null, null, null]
           msg[2] = {
             'payload': raw.FavoritesUpdateID, raw,
             'topic': `household/${player.host}/ContentDirectory/contentMySonos`
           }
           node.send(msg)
         }
+        if (raw.ShareListUpdateID && subscriptions.contentMusicLibrary) {
+          const msg = [null, null, null, null, null]
+          msg[3] = {
+            'payload': raw.ShareListUpdateID, raw,
+            'topic': `household/${player.host}/ContentDirectory/contentMusicLibrary`
+          }
+          node.send(msg)
+        }
+        if (raw.SavedQueuesUpdateID && subscriptions.contentSonosPlaylists) {
+          const msg = [null, null, null, null, null]
+          msg[4] = {
+            'payload': raw.SavedQueuesUpdateID, raw,
+            'topic': `household/${player.host}/ContentDirectory/contentSonosPlaylists`
+          }
+          node.send(msg)
+        }
+        
       })
       debug('subscribed to ContentDirectoryService')
 

@@ -28,14 +28,14 @@
         value: false
       },
       outputs: { 
-        value: 3
+        value: 5
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#E56717',
     paletteLabel: 'household events',
-    outputLabels: ['topology','alarm list', 'content'],
+    outputLabels: ['topology','alarm list', 'contentMySonos', 'contentMusicLibrary', 'contentSonosPlaylists'],
     label: function() {
       return 'household events'
     },
@@ -117,11 +117,8 @@
       <div class="form-row">
         <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
         <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          <b>Output 1 (Service zoneGroupTopology)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-topology"> Group zone </label>
-          <br><b>Output 2 (Service alarmList)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-alarmList" > Alarm list</label>
-          <br><b>Output 3 (Service contentDirectory)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentMySonos"> My Sonos</label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentMusicLibrary"> Music Library</label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentSonosPlaylists"> SONOS-Playlists</label>
