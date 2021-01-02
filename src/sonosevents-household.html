@@ -1,0 +1,156 @@
+<!-- Sonos Events Household Node -->
+<!-- Registering Node (JavaScript) -->
+<script type="text/javascript">
+  RED.nodes.registerType('sonosevents-household', {
+    category: 'sonosevents',
+    defaults: {
+      confignode: {
+        value: 'household',
+        type: 'sonosevents-config'
+      },
+      playerHostname: { 
+        value: '',
+        required: true
+      },
+      topology: { 
+        value: true
+      },
+      alarmList: { 
+        value: false
+      },
+      contentMySonos: { 
+        value: false
+      },
+      contentMusicLibrary: { 
+        value: false
+      },
+      contentSonosPlaylists: { 
+        value: false
+      },
+      outputs: { 
+        value: 3
+      }
+    },
+    inputs: 0, // set the number of inputs - only 0 or 1
+    icon: 'sonos.png', // saved in icons/myicon.png
+    color: '#E56717',
+    paletteLabel: 'household events',
+    outputLabels: ['topology','alarm list', 'content'],
+    label: function() {
+      return 'household';
+    },
+    oneditprepare: function() {      
+      try {
+        $('#node-input-playerHostname').autocomplete('destroy')
+      } catch (err) {}
+      
+      $('#node-lookup-playerHostname').click(function() {
+        $('#node-lookup-playerHostname-icon').removeClass('fa-search')
+        $('#node-lookup-playerHostname-icon').addClass('spinner')
+        $('#node-input-playerHostname').addClass('disabled')
+        $.getJSON('/nrcse/searchDevices', function(sonosPlayer) {
+          $('#node-lookup-playerHostname-icon').addClass('fa-search')
+          $('#node-lookup-playerHostname-icon').removeClass('spinner')
+          $('#node-lookup-playerHostname').removeClass('disabled')
+          var dataArray = [];
+          $.each(sonosPlayer, function(i, element) {
+            dataArray.push(element)
+          });
+          $('#node-input-playerHostname')
+            .autocomplete({
+              source: dataArray,
+              minLength: 0,
+              close: function(event, ui) {
+                $('#node-input-playerHostname').autocomplete('destroy')
+              }
+            })
+            .autocomplete('search', '')
+        })
+      })
+    
+    }, 
+    oneditsave: function() {
+      // currently nothing
+    },
+    oneditcancel: function() {
+     // currently nothing
+    }
+  })
+</script>
+
+<!-- Setting design and inputs for node panel (HTML)-->
+<script type="text/html" data-template-name="sonosevents-household">
+  <style>
+    label.event-checkbox {
+        display: block !important;
+        width: auto !important;
+    }
+    label.event-checkbox input {
+        width: auto !important;
+        margin-top: -3px !important;
+    }
+  </style>
+  
+  
+  <div id="main-props">
+    <!-- Config node -->
+    <div class="form-row">
+      <label for="node-input-confignode" style="width: 25%;"><i class="fa fa-gear" ></i> Config node</label>
+      <input type="text" id="node-input-confignode" style="width: auto;">
+    </div>
+    <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
+      Config node:  There should only be one config node per household to define the internal web server. 
+     </div><br>
+
+    <!-- SONOS player hostname such such 192.168.178.35-->
+    <div class="form-row">
+      <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player </label>
+      <input type="text" id="node-input-playerHostname"  placeholder="192.168.x.x" style="width: 60%;">
+      <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
+    </div>
+    <div class="form-tips">
+      Player:  Use the search button to discover SONOS player in your local network and select any player.
+    </div><br>
+
+    <!-- Events-->
+    <div class="form-row">
+      <div class="form-row">
+        <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
+        <div style="width: auto; display: inline-block; vertical-align: text-top;">
+          <b>Output 1 (ZoneGroupTopologyService)</b>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-topology"> Group zone </label>
+          <br><b>Output 2 (AlarmListService)</b>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-alarmList" > Alarm list</label>
+          <br><b>Output 3 (ContentDirectory Service)</b>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-contentMySonos"> My Sonos</label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-contentMusicLibrary"> Music Library</label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-contentSonosPlaylists"> SONOS-Playlists</label>
+      </div>
+    </div>
+
+    <div class="form-tips" style="width: auto;">
+      Events: Each item is send via a single message (no packages) with topic household\{playerHostname}\{service}\{item}
+     </div><br>
+
+    <!-- Amount of outputs -->
+    <div class="form-row">
+      <label for="node-input-outputs" style="width: 25%;"><i class="fa fa-sign-out"></i> Outputs</label>
+      <input type="text" id="node-input-outputs" placeholder="3" disabled/>
+    </div>
+
+    <!-- Node name -->
+    <div class="form-row">
+      <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="This node name" />
+    </div><br>
+    
+    <!-- Dialog help -->
+    Further information: See the help text.
+  </div>  
+</script>
+
+<!-- Help text (HTML) -->
+<script type="text/html" data-help-name="sonosevents-household">
+  Under construction!
+
+</script>

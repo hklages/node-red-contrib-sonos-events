@@ -14,70 +14,63 @@ const debug = require('debug')('nrcse:Helper')
 
 module.exports = {
 
-  transformAvTransportData: (data) => {
+  betterAvTransportData: (raw) => {
     debug('method >>%s', 'transformAvTransportData')
 
-    const transformed = { 'raw': data } // keep the original data
-
-    if (module.exports.isValidProperty(data, ['AVTransportURI'])) {
-      transformed.avTransportUri = data.AVTransportURI
-      debug('avTransportURI >>%s', transformed.avTransportUri)
-      transformed.internalSource = module.exports.internalSource(transformed.avTransportUri)
-      debug('internalSource >>%s', transformed.internalSource)
+    const content = {} 
+    let contentCategory = null // for those cases AVTransportURI is not given
+    if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
+      content.avTransportUri = raw.AVTransportURI
+      debug('avTransportURI >>%s', content.avTransportUri)
+      contentCategory = module.exports.getContentCategory(content.avTransportUri)
+      debug('contentCategory >>%s', contentCategory)
     }
 
-    if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'Title'])) {
-      transformed.title = data.CurrentTrackMetaData.Title
-      debug('title >>%s', transformed.title)
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
+      content.title = raw.CurrentTrackMetaData.Title
+      debug('title >>%s', content.title)
     }
-    if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'Artist'])) {
-      transformed.artist = data.CurrentTrackMetaData.Artist
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
+      content.artist = raw.CurrentTrackMetaData.Artist
     }
 
-    if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'Album'])) {
-      transformed.album =data.CurrentTrackMetaData.Album
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
+      content.album =raw.CurrentTrackMetaData.Album
     }
-    if (module.exports.isValidProperty(data, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
-      transformed.artUri = data.CurrentTrackMetaData.AlbumArtUri
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
+      content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
     }
     
-    if (module.exports.isValidProperty(data, ['TransportState'])) {
-      transformed.playbackstate = data.TransportState.toLowerCase()
+    let playbackstate
+    if (module.exports.isValidProperty(raw, ['TransportState'])) {
+      playbackstate = raw.TransportState.toLowerCase()
     }
 
-    // AVTransport if exists overrules EnqueuedTransport...
-    // TODO for what is this
-    // transformed.upnpClass = ''
-    // if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
-    //   transformed.upnpClass = data.EnqueuedTransportURIMetaData.UpnpClass
-    // }
-    // if (module.exports.isValidProperty(data, ['AVTransportURIMetaData', 'UpnpClass'])) {
-    //   transformed.upnpClass = data.AVTransportURIMetaData.UpnpClass
-    // }
-    // if (module.exports.isValidProperty(data, ['EnqueuedTransportURIMetaData', 'Title'])) {
-    //   transformed.station = data.EnqueuedTransportURIMetaData.Title
-    //   debug('station >>%s', transformed.station)
-    // }
+    // TODO What is with Enqueued data= those of the initial command to play the playlist, ....
  
-    return transformed
+    return { content, contentCategory, playbackstate }
   },
 
-  transformGroupRenderingData: (data) => {
+  betterGroupRenderingData: (data) => {
     debug('method >>%s', 'transformGroupRenderingData')
-    const transformed = { 'raw': data }
+    const better = {}
     if (module.exports.isValidProperty(data, ['GroupMute'])) {
-      transformed.groupMute = (data.GroupMute ? 'on' : 'Off')
-      debug('groupMute >>%s', transformed.groupMute)
+      better.groupMuteState = (data.GroupMute ? 'on' : 'Off')
+      debug('groupMuteState >>%s', better.groupMuteState)
     }
-    return transformed
+    if (module.exports.isValidProperty(data, ['GroupVolume'])) {
+      better.groupVolume = data.GroupVolume
+      debug('groupVolume >>%s', better.groupVolume)
+    }
+    return better
   },
 
-  transformZoneData: (data, playerHostname) => {
+  betterZoneData: (raw, playerHostname) => {
     debug('method >>%s', 'transformZoneData')
-    // TODO async an throw exeception when no player found
-    const transformed = { 'raw': data }
-    if (module.exports.isValidProperty(data, ['ZoneGroupState'])) {
-      const allGroupArray = data.ZoneGroupState
+    // TODO async an throw exception when no player found
+    const better = {}
+    if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
+      const allGroupArray = raw.ZoneGroupState
       // Get group coordinator name and size
       let foundGroupIndex = -1
       for (let iGroups = 0; iGroups < allGroupArray.length; iGroups++) {
@@ -92,18 +85,20 @@ module.exports = {
         }
       }
       // TODO check existence
-      transformed.groupName = allGroupArray[foundGroupIndex].name
-      transformed.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
-      transformed.coordinatorHostname = allGroupArray[foundGroupIndex].coordinator.host
-      transformed.groupSize = allGroupArray[foundGroupIndex].members.length
-      transformed.groupMemberNames = allGroupArray[foundGroupIndex].members.map((member) => {
+      // TODO return error if -1
+
+      better.groupName = allGroupArray[foundGroupIndex].name
+      better.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
+      better.coordinatorHostname = allGroupArray[foundGroupIndex].coordinator.host
+      better.groupSize = allGroupArray[foundGroupIndex].members.length
+      better.groupMemberNames = allGroupArray[foundGroupIndex].members.map((member) => {
         return member.name // as this name comes from sonos-ts 
       })
     }
-    return transformed
+    return better 
   },
 
-  /** Returns the internal source of a AVTransportURI. 
+  /** Returns the internal content category of a AVTransportURI. 
    * 
    * @param  {string} avTransportUri such as "x-rincon-queue:RINCON_5CAAFD00223601400#0" 
    * from AVTransport, Media Data, property CurrentURI or event AVTransportURI
@@ -112,7 +107,7 @@ module.exports = {
    * 
    * @throws nothing
    */
-  internalSource: (avTransportUri) => {
+  getContentCategory: (avTransportUri) => {
     debug('method >>%s', 'internalSource')
 
     // TODO arg is string and not empty

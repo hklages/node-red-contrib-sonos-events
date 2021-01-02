@@ -1,7 +1,7 @@
-<!-- Sonos Events Notify Node -->
+<!-- Sonos Events Player Node -->
 <!-- Registering Node (JavaScript) -->
 <script type="text/javascript">
-  RED.nodes.registerType('sonosevents-notify', {
+  RED.nodes.registerType('sonosevents-player', {
     category: 'sonosevents',
     defaults: {
       confignode: {
@@ -12,31 +12,31 @@
         value: '',
         required: true
       },
-      topologyEvent: { 
-        value: true
-      },
-      trackEvent: { 
+      mute: { 
         value: false
       },
-      groupMuteEvent: { 
+      volume: { 
         value: false
       },
-      groupVolumeEvent: { 
+      localGroupUuid: { 
         value: false
       },
-      volumeEvent: { 
+      groupCoordinatorIsLocal: { 
+        value: false
+      },
+      lineInConnected: { 
         value: false
       },
       outputs: { 
-        value: 3
+        value: 4
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
-    color: '#e8640c',
-    paletteLabel: 'sonos events',
+    color: '#FF8040',
+    paletteLabel: 'player events',
     label: function() {
-      return 'events';
+      return 'player';
     },
     oneditprepare: function() {      
       try {
@@ -78,7 +78,7 @@
 </script>
 
 <!-- Setting design and inputs for node panel (HTML)-->
-<script type="text/html" data-template-name="sonosevents-notify">
+<script type="text/html" data-template-name="sonosevents-player">
   <style>
     label.event-checkbox {
         display: block !important;
@@ -109,13 +109,11 @@
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          <label class="event-checkbox"><input type="checkbox" id="node-input-topologyEvent" disabled> Topology (household) </label>
-          <br>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-trackEvent" > Track (group)</label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-groupMuteEvent"> Group Mute (group)</label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-groupVolumeEvent"> Group Volume (group)</label>
-          <br>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-volumeEvent"> Volume</label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-volumeEvent"> Volume</label>  
+        <label class="event-checkbox"><input type="checkbox" id="node-input-muteEvent"> Mute </label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-localGroupUuid"> Group uuid</label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-groupCoordinatorIsLocal"> is Coordinator</label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-lineInConnected"> Line In is connected/label>
       </div>
     </div>
     <div class="form-tips">
@@ -125,7 +123,7 @@
     <!-- Amount of outputs -->
     <div class="form-row">
       <label for="node-input-outputs" style="width: 25%;"><i class="fa fa-sign-out"></i> Outputs</label>
-      <input type="text" id="node-input-outputs" placeholder="1" style="width: auto"/>
+      <input type="text" id="node-input-outputs" placeholder="1" style="width: auto" disabled/>
     </div>
 
     <!-- Node name -->
@@ -135,17 +133,17 @@
     </div>
     <br>
     <div class="form-tips" id="node-tip">
-     Some additional information.<br>
-     See help for more available options.
+      
     </div>
   
     <!-- Dialog help -->
-    
+    Dialog help
   </div>
 
 
 </script>
 
 <!-- Help text (HTML) -->
-<script type="text/x-red" data-help-name="sonosevents-notify">
+<script type="text/html" data-help-name="sonosevents-household">
+  Help text
 </script>
