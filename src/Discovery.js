@@ -7,7 +7,7 @@
  * 
  * @author Henning Klages
  * 
- * @since 2020-12-29
+ * @since 2021-01-02
 */
 
 const { getGroupsAllFast } = require('./Sonos-Commands.js')

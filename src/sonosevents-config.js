@@ -1,5 +1,15 @@
 'use strict'
 
+/**
+ * This module is to define the configuration.
+ *
+ * @module config
+ * 
+ * @author Henning Klages
+ * 
+ * @since 2021-01-02
+*/
+
 const { discoverAllPlayer } = require('./Discovery.js')
 
 const debug = require('debug')('nrcse:config')

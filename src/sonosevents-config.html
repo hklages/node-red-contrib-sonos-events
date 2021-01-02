@@ -29,14 +29,7 @@
 
 <!-- Setting design and inputs for node panel (HTML)-->
 <script type="text/html" data-template-name="sonosevents-config">
-  <div class="form-tips">
-    Any change needs: first a deploy and then a Node-RED restart.<br>
-    <br>
-    In simple situations (only one network device in the same network as the speakers) it just picks the first IP from the first network device found.
-    <br>
-    Default port is 6329.<br>
-  </div>
-  <br>
+  
   <div class="form-row">
     <label for="node-config-input-listenerHostname" style="width: 30%;"><i class="fa fa-globe"></i> Listener hostname</label>
     <input type="text" id="node-config-input-listenerHostname" placeholder="use default" style="width: auto;">
@@ -46,6 +39,21 @@
    <label for="node-config-input-listenerPort" style="width: 30%;"><i class="fa fa-globe"></i> Listener port</label>
     <input type="text" id="node-config-input-listenerPort" placeholder="use default" style="width: auto;">
   </div>
+
+  <div class="form-tips">
+    Automation: <br>
+    In simple situations (only one network device in the same network as the speakers) it just picks the first IP from the first network device found.
+    <br>
+    Default port is 6329.<br>
+    <br>
+    RedMatic: Please set the listener name to the CCU ip address such as 192.168.178.25. Port can be default. 
+    <br>
+    Any change will result in creating environmental variables SONOS_LISTENER_HOST, SONOS_LISTENER_PORT and tries to set the values. 
+    <br>
+    **** RESTART OF NODE-RED MIGHT BE NECESSARY ****
+
+  </div>
+  <br>
 
   <div class="form-row">
     <label for="node-input-debugOn" style="width: 30%;"> Debugging enabled</label>

@@ -7,12 +7,13 @@
  * 
  * @author Henning Klages
  * 
- * @since 2020-12-31
+ * @since 2021-01-02
 */
 
-const { SonosDevice } = require('@svrooij/sonos/lib')
+const { SonosDevice, SonosEvents } = require('@svrooij/sonos/lib')
+const { isValidProperty } = require('./Helper')
 
-const debug = require('debug')('nrcse:notify')
+const debug = require('debug')('nrcse:player')
 
 module.exports = function (RED) {
 
@@ -29,11 +30,11 @@ module.exports = function (RED) {
 
     // get data from dialog
     const subscriptions = {
-      mute: config.mute,
+      mutestate: config.mutestate,
       volume: config.volume,
       localGroupUuid: config.localGroupUuid,
-      groupCoordinatorIsLocal: config.groupCoordinatorIsLocal,
-      lineInConnected: config.lineInConnected
+      lineInConnected: config.lineInConnected,
+      micEnabled: config.micEnabled
     }
 
     // create new player from input such as 192.168.178.35
@@ -50,14 +51,17 @@ module.exports = function (RED) {
         node.debug(`error >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
       })
     
+    // we need to unsubscribe, when node is deleted or redeployed
     node.on('close', function (done) {
-      cancelAllSubscriptions(player, subscriptions, done)
+      cancelAllSubscriptions(player, subscriptions)
         .then(() => {
-          node.log('node-on-close -subscriptions canceled.')
+          node.log('nodeOnClose >>subscriptions canceled')
+          done()
         })
         .catch(error => {
-          node.log('node-on-close error>>'
-                + JSON.stringify(error, Object.getOwnPropertyNames(error)))
+          node.log('nodeOnClose error>>'
+            + JSON.stringify(error, Object.getOwnPropertyNames(error)))
+          done(error)
         })
     })
 
@@ -71,45 +75,79 @@ module.exports = function (RED) {
 
   async function asyncOnEvent (node, subscriptions, player) {
     
-    // TODO all ifs and then filtering!
-    player.RenderingControlService.Events.on('serviceEvent', (data) => {
-      debug('new RenderingControlService event arrived')
-      const msg = [null, null, null, null]
-      msg[0] = { 'payload': data, 'topic': `player/${player.host}/renderingControl` }
-      node.send(msg)
-    })
-    debug('subscribed to RenderingControlService')
+    // TODO ERROR HANDLING
+    // RenderingControlService 
+    if (subscriptions.volume) {
+      player.Events.on(SonosEvents.Volume, (payload) => {
+        debug('new volume event')
+        const msg = [null, null, null, null]
+        payload = String(payload)
+        msg[0] = { payload,  'topic': `player/${player.host}/renderingControl/volume` }
+        node.send(msg)
+      })
+      debug('subscribed to volume')
+    }
     
-    player.GroupManagementService.Events.on('serviceEvent', (data) => {
-      debug('new GroupManagementService event arrived')
-      const msg = [null, null, null, null]
-      msg[1] = { 'payload': data, 'topic': `player/${player.host}/groupManagement` }
-      node.send(msg)
-    })
-    debug('subscribed to GroupManagementService')
+    if (subscriptions.mutestate) {
+      player.Events.on(SonosEvents.Mute, (payload) => {
+        debug('new mute state event')
+        const msg = [null, null, null, null]
+        payload = (payload ? 'on' : 'off')
+        msg[0] = { payload, 'topic': `player/${player.host}/renderingControl/mutestate` }
+        node.send(msg)
+      })
+      debug('subscribed to mutestate')
+    }
 
-    // TODO check hier wheter device supports it!
-    player.DevicePropertiesService.Events.on('serviceEvent', (data) => {
-      debug('new DevicePropertiesService event arrived')
-      const msg = [null, null, null, null]
-      msg[2] = { 'payload': data, 'topic': `player/${player.host}/deviceProperties` }
-      node.send(msg)
-    })
-    debug('subscribed to DevicePropertiesService')
+    // GroupManagementService
+    if (subscriptions.localGroupUuid) {
+      player.GroupManagementService.Events.on('serviceEvent', (raw) => {
+        debug('new GroupManagementService event')
+        const msg = [null, null, null, null]
+        msg[1] = {
+          'payload': raw.LocalGroupUUID, raw,
+          'topic': `player/${player.host}/groupManagement/localGroupUuid`
+        }
+        node.send(msg)
+      })
+      debug('subscribed to GroupManagementService')
+    }
 
+    // AudioInService
     // TODO check whether device supports it!
-    player.AudioInService.Events.on('serviceEvent', (data) => {
-      debug('new AudioInService event arrived')
-      const msg = [null, null, null, null]
-      msg[3] = { 'payload': data, 'topic': `player/${player.host}/audioInService` }
-      node.send(msg)
-    })
-    debug('subscribed to AudioInService')
+    if (subscriptions.lineInConnected) {
+      player.AudioInService.Events.on('serviceEvent', (raw) => {
+        debug('new AudioInService event')
+        const msg = [null, null, null, null]
+        let payload = 'not available'
+        if (isValidProperty(raw, ['LineInConnected'])) {
+          payload = (raw.LineInConnected ? 'yes' : 'no')
+        }
+        msg[2] = { payload, raw, 'topic': `player/${player.host}/audioInService/lineInConnected` }
+        node.send(msg)
+      })
+      debug('subscribed to AudioInService')
+    }
+
+    // DevicePropertiesService
+    if (subscriptions.micEnabled) {
+      player.DevicePropertiesService.Events.on('serviceEvent', (raw) => {
+        debug('new DevicePropertiesService event')
+        const msg = [null, null, null, null]
+        let payload = 'not available'
+        if (isValidProperty(raw, ['MicEnabled'])) {
+          payload = (raw.MicEnabled === 1 ? 'on' : 'off')
+        }
+        msg[3] = { payload, raw, 'topic': `player/${player.host}/deviceProperties/micState` }
+        node.send(msg)
+      })
+      debug('subscribed to DevicePropertiesService')
+    }
 
     return true
   }
 
-  async function cancelAllSubscriptions (player, subscriptions, callback) {
+  async function cancelAllSubscriptions (player) {
     
     // TODO check whether only for those with subscription or like this
     await player.RenderingControlService.Events.removeAllListeners('serviceEvent')
@@ -117,6 +155,5 @@ module.exports = function (RED) {
     await player.DevicePropertiesService.Events.removeAllListeners('serviceEvent')
     await player.AudioInService.Events.removeAllListeners('serviceEvent')
     
-    callback()
   }
 }

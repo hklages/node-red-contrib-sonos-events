@@ -7,7 +7,7 @@
  * 
  * @author Henning Klages
  * 
- * @since 2020-12-23
+ * @since 2021-01-02
 */
 const { isTruthyAndNotEmptyString, isValidProperty, decodeHtml, isValidPropertyNotEmptyString
 } = require('./Helper.js')

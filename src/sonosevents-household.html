@@ -37,7 +37,7 @@
     paletteLabel: 'household events',
     outputLabels: ['topology','alarm list', 'content'],
     label: function() {
-      return 'household';
+      return 'household events'
     },
     oneditprepare: function() {      
       try {
@@ -117,11 +117,11 @@
       <div class="form-row">
         <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
         <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          <b>Output 1 (ZoneGroupTopologyService)</b>
+          <b>Output 1 (Service zoneGroupTopology)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-topology"> Group zone </label>
-          <br><b>Output 2 (AlarmListService)</b>
+          <br><b>Output 2 (Service alarmList)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-alarmList" > Alarm list</label>
-          <br><b>Output 3 (ContentDirectory Service)</b>
+          <br><b>Output 3 (Service contentDirectory)</b>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentMySonos"> My Sonos</label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentMusicLibrary"> Music Library</label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-contentSonosPlaylists"> SONOS-Playlists</label>

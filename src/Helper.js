@@ -7,7 +7,7 @@
  * 
  * @author Henning Klages
  * 
- * @since 2020-12-20
+ * @since 2021-01-02
 */
 
 const debug = require('debug')('nrcse:Helper')

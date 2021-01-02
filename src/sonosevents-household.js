@@ -7,7 +7,7 @@
  * 
  * @author Henning Klages
  * 
- * @since 2020-12-31
+ * @since 2021-01-02
 */
 
 const { SonosDevice } = require('@svrooij/sonos/lib')
@@ -72,38 +72,48 @@ module.exports = function (RED) {
   //                                      Subscriptions
   // .......................................................................................
   async function asyncOnEvent (node, subscriptions, player) {
+    
+    // TODO ERROR HANDLING
 
+    // ZoneGroupTopologyService
     if (subscriptions.topology) {
       player.ZoneGroupTopologyService.Events.on('serviceEvent', (raw) => {
         debug('new ZoneGroupTopologyService event >>', JSON.stringify(raw))
         const msg = [null, null, null]
         msg[0] = {
           'payload': betterZoneData(raw, player.host), raw,
-          'topic': `household/${player.host}/zoneGroupTopologyService`
+          'topic': `household/${player.host}/zoneGroupTopology/topology`
         }        
         node.send(msg)
       })
       debug('subscribed to ZoneGroupTopologyService')
     }
 
+    // AlarmClockService
     if (subscriptions.alarmList) {
       player.AlarmClockService.Events.on('serviceEvent', (raw) => {
         debug('new AlarmClockService event >>', JSON.stringify(raw))
         const msg = [null, null, null] 
         msg[2] = {
           'payload': raw,
-          'topic': `player/${player.host}/alarmClock/alarmList`
+          'topic': `household/${player.host}/alarmClock/alarmList`
         }
         node.send(msg)
       })
       debug('subscribed to AlarmClockService')
 
-      player.AlarmClockService.Events.on('Error', (error) => {
+      player.AlarmClockService.Events.on('error', (error) => {
+        // eslint-disable-next-line max-len
+        debug('error AlarmClockService on >>', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+      })
+
+      player.AlarmClockService.Events.on('error', (error) => {
         // eslint-disable-next-line max-len
         debug('error AlarmClockService on >>', JSON.stringify(error, Object.getOwnPropertyNames(error)))
       })
     }
 
+    // ContentDirectoryService
     if (subscriptions.contentMySonos
       || subscriptions.contentMusicLibrary
       || subscriptions.contentSonosPlaylists) {
@@ -112,7 +122,7 @@ module.exports = function (RED) {
        
         if (raw.SavedQueuesUpdateID && subscriptions.contentSonosPlaylists) {
           const msg = [null, null, null]
-          msg[3] = {
+          msg[2] = {
             'payload': raw.SavedQueuesUpdateID, raw,
             'topic': `household/${player.host}/ContentDirectory/contentSonosPlaylists`
           }
@@ -120,7 +130,7 @@ module.exports = function (RED) {
         }
         if (raw.ShareListUpdateID && subscriptions.contentMusicLibrary) {
           const msg = [null, null, null]
-          msg[3] = {
+          msg[2] = {
             'payload': raw.ShareListUpdateID, raw,
             'topic': `household/${player.host}/ContentDirectory/contentMusicLibrary`
           }
@@ -128,7 +138,7 @@ module.exports = function (RED) {
         }
         if (raw.FavoritesUpdateID && subscriptions.contentMySonos) {
           const msg = [null, null, null]
-          msg[3] = {
+          msg[2] = {
             'payload': raw.FavoritesUpdateID, raw,
             'topic': `household/${player.host}/ContentDirectory/contentMySonos`
           }
@@ -136,7 +146,8 @@ module.exports = function (RED) {
         }
       })
       debug('subscribed to ContentDirectoryService')
-      player.ContentDirectoryService.Events.on('Error', (error) => {
+
+      player.ContentDirectoryService.Events.on('error', (error) => {
         // eslint-disable-next-line max-len
         debug('error ContentDirectoryService on >>', JSON.stringify(error, Object.getOwnPropertyNames(error)))
       })

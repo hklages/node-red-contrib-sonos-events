@@ -12,19 +12,19 @@
         value: '',
         required: true
       },
-      mute: { 
-        value: false
-      },
       volume: { 
+        value: true
+      },
+      mutestate: { 
         value: false
       },
       localGroupUuid: { 
         value: false
       },
-      groupCoordinatorIsLocal: { 
+      lineInConnected: { 
         value: false
       },
-      lineInConnected: { 
+      micEnabled: { 
         value: false
       },
       outputs: { 
@@ -35,8 +35,9 @@
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#FF8040',
     paletteLabel: 'player events',
+    outputLabels: ['volume, mutestate','localGroupUuid', 'lineInConnected', 'micEnabled'],
     label: function() {
-      return 'player';
+      return 'player events';
     },
     oneditprepare: function() {      
       try {
@@ -97,6 +98,9 @@
       <label for="node-input-confignode" style="width: 25%;"><i class="fa fa-gear"></i> Config Node</label>
       <input type="text" id="node-input-confignode" style="width: auto;">
     </div>
+    <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
+      Config node:  There should only be one config node per household to define the internal web server. 
+     </div><br>
 
     <!-- SONOS player hostname -->
     <div class="form-row">
@@ -104,40 +108,45 @@
       <input type="text" id="node-input-playerHostname" style="width: auto;" placeholder="192.168.x.x">
       <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
     </div>
+    <div class="form-tips">
+      Player:  Use the search button to discover SONOS player in your local network and select your player.
+    </div><br>
     
     <!-- Events-->
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
-        <label class="event-checkbox"><input type="checkbox" id="node-input-volumeEvent"> Volume</label>  
-        <label class="event-checkbox"><input type="checkbox" id="node-input-muteEvent"> Mute </label>
+        <b>Output 1 (Service renderingControl)</b>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-volume"> Volume</label>  
+        <label class="event-checkbox"><input type="checkbox" id="node-input-mutestate"> Mutestate </label>
+        <br><b>Output 2 (Service groupManagement)</b>
         <label class="event-checkbox"><input type="checkbox" id="node-input-localGroupUuid"> Group uuid</label>
-        <label class="event-checkbox"><input type="checkbox" id="node-input-groupCoordinatorIsLocal"> is Coordinator</label>
-        <label class="event-checkbox"><input type="checkbox" id="node-input-lineInConnected"> Line In is connected/label>
+        <br><b>Output 3 (Service audioInService)</b>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-lineInConnected"> Line In is connected</label>
+        <br><b>Output 4 (Service deviceProperties)</b>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-micEnabled"> Microphone state</label>
       </div>
     </div>
-    <div class="form-tips">
-    This node always subscribes to ZoneGroupTopologyService events and to selected other out of above list.
-    </div>
+    <div class="form-tips" style="width: auto;">
+      Events: Each item is send via a single message (no packages) with topic player\{playerHostname}\{service}\{item}
+     </div><br>
     <br>
+
     <!-- Amount of outputs -->
     <div class="form-row">
       <label for="node-input-outputs" style="width: 25%;"><i class="fa fa-sign-out"></i> Outputs</label>
-      <input type="text" id="node-input-outputs" placeholder="1" style="width: auto" disabled/>
+      <input type="text" id="node-input-outputs" placeholder="4" disabled/>
     </div>
 
     <!-- Node name -->
     <div class="form-row">
       <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
-      <input type="text" id="node-input-name" placeholder="This node name" style="width: auto"/>
-    </div>
-    <br>
-    <div class="form-tips" id="node-tip">
-      
-    </div>
+      <input type="text" id="node-input-name" placeholder="This node name" />
+    </div><br>
+    
   
     <!-- Dialog help -->
-    Dialog help
+    Further information: See the help text.
   </div>
 
 

@@ -8,7 +8,7 @@
  * 
  * @author Henning Klages
  * 
- * @since 2020-12-31
+ * @since 2021-01-02
 */
 
 const { betterAvTransportData, betterGroupRenderingData, isValidProperty, } = require('./Helper.js')
