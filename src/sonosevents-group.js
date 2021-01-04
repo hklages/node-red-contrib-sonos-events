@@ -8,20 +8,21 @@
  * 
  * @author Henning Klages
  * 
- * @since 2021-01-02
+ * @since 2021-01-04
 */
 
-const { betterAvTransportData, betterGroupRenderingData, isValidProperty, } = require('./Helper.js')
+const { improvedAvTransportData, improvedGroupRenderingData, isValidProperty, }
+  = require('./Helper.js')
 
 const { SonosDevice } = require('@svrooij/sonos/lib')
-
 const debug = require('debug')('nrcse:group')
 
 module.exports = function (RED) {
 
   /** Create event node notification based on configuration and send messages
    * @param  {object} config current node configuration data
-   */
+  */
+  
   function sonosEventsGroupsNode (config) {
     debug('method >>%s', 'sonosEventsGroupNode')
     RED.nodes.createNode(this, config)
@@ -46,112 +47,148 @@ module.exports = function (RED) {
     //TODO in dialog should be mentioned that coordinator!
 
     // async wrapper, status and error handling
-    asyncOnEvent(node, subscriptions, coordinator)
+    asyncSubscribeToMultipleEvents(node, subscriptions, coordinator)
       .then((success) => { // success, when handler is successfully established
         node.status({ fill: 'green', shape: 'ring', text: 'connected' })
-        node.debug(`success >>${JSON.stringify(success)}`)  
+        node.debug(`success >>${JSON.stringify(success)}`)
       })
       .catch((error) => {
         node.status({ fill: 'red', shape: 'ring', text: 'disconnected' })
-        node.debug(`error >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+        node.debug(`error subscribe>>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
       })
  
-    // we need to unsubscribe, when node is deleted or redeployed
+    // unsubscribe to all, when node is deleted (redeployed does delete)
     node.on('close', function (done) {
       cancelAllSubscriptions(coordinator, subscriptions)
         .then(() => {
-          node.log('nodeOnClose >>subscriptions canceled')
+          debug('nodeOnClose >>all subscriptions canceled')
           done()
         })
         .catch(error => {
-          node.log('nodeOnClose error>>'
-            + JSON.stringify(error, Object.getOwnPropertyNames(error)))
+          debug(`nodeOnClose error during cancel subscriptions >>
+            ${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
           done(error)
         })
     })
+
+    return true
   }
 
   RED.nodes.registerType('sonosevents-group', sonosEventsGroupsNode)
 
-  //
-  //                                      Subscriptions
-  // .......................................................................................
+}
 
-  async function asyncOnEvent (node, subscriptions, coordinator) {
+async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator) {
     
-    // TODO verify that node.done() makes sense
-    if (subscriptions.content  || subscriptions.contentCategory || subscriptions.playbackstate) {
-      coordinator.AVTransportService.Events.on('serviceEvent', (raw) => {
-        debug('new AVTransportService arrived')
-        
-        // Check playback state TRANSITION
-        if (isValidProperty(raw, ['TransportState'])) {
-          if (raw.TransportState === 'TRANSITIONING' && subscriptions.ignoreTransition) {
-            debug('no output send as TRANSITION detected') 
+  let errorCount = 0 // global and command. be aware!
+  const msgMaster = [null, null, null, null, null, null, null, null]
+
+  // bind events
+  if (subscriptions.content || subscriptions.contentCategory || subscriptions.playbackstate) {
+    coordinator.AVTransportService.Events.on('serviceEvent', sendMsgsAVTransport)
+    debug('subscribed to AVTransportService')
+  }
+
+  if (subscriptions.groupVolume || subscriptions.groupVolume) {
+    coordinator.GroupRenderingControlService.Events.on('serviceEvent', sendMsgsGroupRenderingControl)
+    debug('subscribed to GroupRenderingControlService')
+  }
+
+  return true
+
+  // .............. sendMsg functions ...............
+  // TODO msg[0] ... msg[2] should use parameter! - bind?
+  async function sendMsgsAVTransport (raw) {
+    let payload
+    let topic
+    try {
+      debug('new AVTransportService event')
+      // Filter playback state TRANSITION if requested if requested
+      if (isValidProperty(raw, ['TransportState'])) {
+        if (raw.TransportState === 'TRANSITIONING' && subscriptions.ignoreTransition) {
+          debug('no output send as TRANSITION detected')
+          return true
+        }
+      }
+  
+      //Filter Check Album, title Artist with ZPSTR string        
+      ['Title', 'Album', 'Artist'].forEach(topic => {
+        let item
+        if (isValidProperty(raw, ['CurrentTrackMetaData', topic])) {
+          item = raw.CurrentTrackMetaData[topic]
+          if (typeof item === 'string' & item.startsWith('ZPSTR_')) {
+            debug('no output send as ZPSTR_ detected in >>%s', topic)
             return true
-          }  
-        }
-      
-        //Check Album, title Artist ZPSTR string
-        ['Title', 'Album', 'Artist'].forEach(topic => {
-          let item
-          if (isValidProperty(raw, ['CurrentTrackMetaData', topic])) {
-            item = raw.CurrentTrackMetaData[topic]
-            if (typeof item === 'string' & item.startsWith('ZPSTR_')) {
-              debug('no output send as ZPSTR_ detected in >>>%s', topic) 
-              return true
-            }  
           }
-        })
-
-        if (subscriptions.content) {
-          const msg = [null, null, null, null, null]
-          // eslint-disable-next-line max-len
-          msg[0] = { 'payload': betterAvTransportData(raw).content, raw, 'topic': `group/${coordinator.host}/avTransport/content`, 'properties': Object.keys(raw) }
-          node.send(msg)
-        }
-        if (subscriptions.contentCategory && betterAvTransportData(raw).contentCategory) {
-          const msg = [null, null, null, null, null]
-          msg[1] = { 'payload': betterAvTransportData(raw).contentCategory, raw, 'topic': `group/${coordinator.host}/avTransport/contentCategory` }
-          node.send(msg)   
-        }
-        if (subscriptions.playbackstate) {
-          const msg = [null, null, null, null, null]
-          // eslint-disable-next-line max-len
-          msg[2] = { 'payload': betterAvTransportData(raw).playbackstate, raw, 'topic': `group/${coordinator.host}/avTransport/playbackstate` }
-          node.send(msg)
         }
       })
-      debug('subscribed to AVTransportService')  
-    }
 
-    if (subscriptions.groupVolume || subscriptions.groupVolume) {
-      coordinator.GroupRenderingControlService.Events.on('serviceEvent', (raw) => {
-        
-        if (subscriptions.groupVolume) {
-          const msg = [null, null, null, null, null]
-          // eslint-disable-next-line max-len
-          msg[3] = { 'payload': betterGroupRenderingData(raw).groupMuteState, raw, 'topic': `group/${coordinator.host}/groupRenderingControl/groupMuteState` }
-          node.send(msg)  
-        }
-        debug('new GroupRenderingControlService arrived')
-        if (subscriptions.groupMuteState) {
-          const msg = [null, null, null, null, null]
-          // eslint-disable-next-line max-len
-          msg[4] = { 'payload': betterGroupRenderingData(raw).groupVolume, raw, 'topic': `group/${coordinator.host}/groupRenderingControl/groupVolume` }
-          node.send(msg)  
-        }
-      })
-      debug('subscribed to GroupRenderingControlService')
+      // define msg s
+      const topicPrefix = `group/${coordinator.host}/AVTransportService/`
+      // TODO check property improved.contentCategory exist als plabackstate also content
+      const improved = await improvedAvTransportData(raw)
+      if (subscriptions.content) {
+        const msg = msgMaster.slice()
+        payload = improved.content
+        topic = topicPrefix + 'content'
+        msg[0] = { payload, raw, topic, 'properties': Object.keys(raw) }
+        node.send(msg)
+      }
+      // check !==null for those cases AVTransportURI is not available
+      if (subscriptions.contentCategory && improved.contentCategory !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.contentCategory
+        topic = topicPrefix + 'contentCategory'
+        msg[1] = { payload, raw, topic }
+        node.send(msg)
+      }
+      if (subscriptions.playbackstate) {
+        const msg = msgMaster.slice()
+        payload = improved.playbackstate
+        topic = topicPrefix + 'playbackstate'
+        msg[2] = { payload, raw, topic }
+        node.send(msg)
+      }
+    } catch (error) {
+      errorCount++
+      node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      node.debug(`error processing AVTransport event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
     }
-    return true
   }
 
-  async function cancelAllSubscriptions (coordinator) {
-    
-    // TODO verify that it is OK to cancel all although there might not be a subscription
-    await coordinator.AVTransportService.Events.removeAllListeners('serviceEvent')
-    await coordinator.GroupRenderingControlService.Events.removeAllListeners('serviceEvent')
-
+  async function sendMsgsGroupRenderingControl (raw) {
+    let payload
+    let topic
+    try {
+      const topicPrefix = `group/${coordinator.host}/groupRenderingControl/`
+      const improved = await improvedGroupRenderingData(raw) 
+      if (subscriptions.groupVolume) {
+        const msg = msgMaster.slice()
+        payload = improved.groupMuteState
+        topic = topicPrefix + 'groupMuteState'
+        msg[3] = { payload, raw, topic }
+        node.send(msg)
+      }
+      debug('new GroupRenderingControlService event')
+      if (subscriptions.groupMuteState) {
+        const msg = msgMaster.slice()
+        payload = improved.groupVolume
+        topic = topicPrefix + 'groupVolume'
+        msg[4] = { payload, raw, topic }
+        node.send(msg)
+      }
+    } catch (error) {
+      errorCount++
+      node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      node.debug(`error processing GroupRenderingControlService event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+    }
   }
+}
+
+async function cancelAllSubscriptions (coordinator) {
+  
+  // TODO verify that it is OK to cancel all although there might not be a subscription
+  await coordinator.AVTransportService.Events.removeAllListeners('serviceEvent')
+  await coordinator.GroupRenderingControlService.Events.removeAllListeners('serviceEvent')
+
 }

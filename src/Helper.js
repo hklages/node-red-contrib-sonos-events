@@ -14,7 +14,7 @@ const debug = require('debug')('nrcse:Helper')
 
 module.exports = {
 
-  betterAvTransportData: (raw) => {
+  improvedAvTransportData: async function (raw) {
     debug('method >>%s', 'transformAvTransportData')
 
     const content = {} 
@@ -51,30 +51,40 @@ module.exports = {
     return { content, contentCategory, playbackstate }
   },
 
-  betterGroupRenderingData: (data) => {
+  improvedGroupRenderingData: async function (data) {
     debug('method >>%s', 'transformGroupRenderingData')
-    const better = {}
+    const improved = {}
     if (module.exports.isValidProperty(data, ['GroupMute'])) {
-      better.groupMuteState = (data.GroupMute ? 'on' : 'off')
-      debug('groupMuteState >>%s', better.groupMuteState)
+      // TODO what is right groupMuteState or groupMutestate
+      improved.groupMuteState = (data.GroupMute ? 'on' : 'off')
+      debug('groupMuteState >>%s', improved.groupMuteState)
     }
     if (module.exports.isValidProperty(data, ['GroupVolume'])) {
-      better.groupVolume = data.GroupVolume
-      debug('groupVolume >>%s', better.groupVolume)
+      // TODO check integer
+      improved.groupVolume = data.GroupVolume
+      debug('groupVolume >>%s', improved.groupVolume)
     }
-    return better
+    return improved
   },
 
-  betterZoneData: (raw, playerHostname) => {
-    debug('method >>%s', 'transformZoneData')
-    // TODO async an throw exception when no player found
-    const better = {}
+  improvedZoneData: async function (raw, playerHostname) {
+    debug('method >>%s', 'improvedZoneData')
+    const improved = {}
     if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
       const allGroupArray = raw.ZoneGroupState
+      if (!Array.isArray(allGroupArray)) {
+        throw new Error('nrcse error: ZoneGroupState is not array')
+      }
       // Get group coordinator name and size
       let foundGroupIndex = -1
       for (let iGroups = 0; iGroups < allGroupArray.length; iGroups++) {
+        if (!Array.isArray(allGroupArray[iGroups].members)) {
+          throw new Error('nrcse error: members is not array')
+        }
         for (let iMembers = 0; iMembers < allGroupArray[iGroups].members.length; iMembers++) {
+          if (!module.exports.isValidProperty(allGroupArray[iGroups].members[iMembers], ['host'])) {
+            throw new Error('nrcse error: member does not have host property')
+          }
           if (playerHostname === allGroupArray[iGroups].members[iMembers].host) { // host = hostname
             foundGroupIndex = iGroups
             break
@@ -84,18 +94,20 @@ module.exports = {
           break
         }
       }
-      // TODO check existence
-      // TODO return error if -1
 
-      better.groupName = allGroupArray[foundGroupIndex].name
-      better.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
-      better.coordinatorHostname = allGroupArray[foundGroupIndex].coordinator.host
-      better.groupSize = allGroupArray[foundGroupIndex].members.length
-      better.groupMemberNames = allGroupArray[foundGroupIndex].members.map((member) => {
+      if (foundGroupIndex === -1) {
+        throw new Error('nrcse error: could not find SONOS player name in list')
+      }
+
+      improved.groupName = allGroupArray[foundGroupIndex].name
+      improved.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
+      improved.coordinatorHostname = allGroupArray[foundGroupIndex].coordinator.host
+      improved.groupSize = allGroupArray[foundGroupIndex].members.length
+      improved.groupMemberNames = allGroupArray[foundGroupIndex].members.map((member) => {
         return member.name // as this name comes from sonos-ts 
       })
     }
-    return better 
+    return improved 
   },
 
   /** Returns the internal content category of a AVTransportURI. 

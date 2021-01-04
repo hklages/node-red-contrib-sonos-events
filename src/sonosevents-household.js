@@ -7,20 +7,19 @@
  * 
  * @author Henning Klages
  * 
- * @since 2021-01-02
+ * @since 2021-01-04
 */
 
+const { improvedZoneData } = require('./Helper.js')
 const { SonosDevice } = require('@svrooij/sonos/lib')
-
-const { betterZoneData } = require('./Helper.js')
-
 const debug = require('debug')('nrcse:household')
 
 module.exports = function (RED) {
 
   /** Create event node notification based on configuration and send messages
    * @param  {object} config current node configuration data
-   */
+  */
+  
   function sonosEventsHouseHoldNode (config) {
     debug('method >>%s', 'sonosEventsHouseholdNode')
     RED.nodes.createNode(this, config)
@@ -41,127 +40,136 @@ module.exports = function (RED) {
     const player = new SonosDevice(config.playerHostname)
 
     /// async wrapper, status and error handling
-    asyncOnEvent(node, subscriptions, player)
+    asyncSubscribeToMultipleEvents(node, subscriptions, player)
       .then((success) => {
         node.status({ fill: 'green', shape: 'ring', text: 'connected' })
         node.debug(`success >>${JSON.stringify(success)}`)  
       })
       .catch((error) => {
         node.status({ fill: 'red', shape: 'ring', text: 'disconnected' })
-        node.debug(`error >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+        node.debug(`error subscribe>>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
       })
   
-    // we need to unsubscribe, when node is deleted or redeployed
+    // unsubscribe to all, when node is deleted (redeployed does delete)
     node.on('close', function (done) {
       cancelAllSubscriptions(player, subscriptions)
         .then(() => {
-          node.log('nodeOnClose >>subscriptions canceled')
+          debug('nodeOnClose >>all subscriptions canceled')
           done()
         })
         .catch(error => {
-          node.log('nodeOnClose error>>'
-            + JSON.stringify(error, Object.getOwnPropertyNames(error)))
+          debug(`nodeOnClose error during cancel subscriptions >>
+            ${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
           done(error)
         })
     })
 
-  }
-  RED.nodes.registerType('sonosevents-household', sonosEventsHouseHoldNode)
-
-  //
-  //                                      Subscriptions
-  // .......................................................................................
-  async function asyncOnEvent (node, subscriptions, player) {
-    
-    // TODO ERROR HANDLING
-
-    // ZoneGroupTopologyService
-    if (subscriptions.topology) {
-      player.ZoneGroupTopologyService.Events.on('serviceEvent', (raw) => {
-        debug('new ZoneGroupTopologyService event >>', JSON.stringify(raw))
-        const msg = [null, null, null, null, null]
-        msg[0] = {
-          'payload': betterZoneData(raw, player.host), raw,
-          'topic': `household/${player.host}/zoneGroupTopology/topology`
-        }        
-        node.send(msg)
-      })
-      debug('subscribed to ZoneGroupTopologyService')
-    }
-
-    // AlarmClockService
-    if (subscriptions.alarmList) {
-      player.AlarmClockService.Events.on('serviceEvent', (raw) => {
-        debug('new AlarmClockService event >>', JSON.stringify(raw))
-        const msg = [null, null, null, null, null]
-        msg[1] = {
-          'payload': raw,
-          'topic': `household/${player.host}/alarmClock/alarmList`
-        }
-        node.send(msg)
-      })
-      debug('subscribed to AlarmClockService')
-
-      player.AlarmClockService.Events.on('error', (error) => {
-        // eslint-disable-next-line max-len
-        debug('error AlarmClockService on >>', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-      })
-
-      player.AlarmClockService.Events.on('error', (error) => {
-        // eslint-disable-next-line max-len
-        debug('error AlarmClockService on >>', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-      })
-    }
-
-    // ContentDirectoryService
-    if (subscriptions.contentMySonos
-      || subscriptions.contentMusicLibrary
-      || subscriptions.contentSonosPlaylists) {
-      player.ContentDirectoryService.Events.on('serviceEvent', raw => {
-        debug('new ContentDirectoryService event >>', JSON.stringify(raw))
-        if (raw.FavoritesUpdateID && subscriptions.contentMySonos) {
-          const msg = [null, null, null, null, null]
-          msg[2] = {
-            'payload': raw.FavoritesUpdateID, raw,
-            'topic': `household/${player.host}/ContentDirectory/contentMySonos`
-          }
-          node.send(msg)
-        }
-        if (raw.ShareListUpdateID && subscriptions.contentMusicLibrary) {
-          const msg = [null, null, null, null, null]
-          msg[3] = {
-            'payload': raw.ShareListUpdateID, raw,
-            'topic': `household/${player.host}/ContentDirectory/contentMusicLibrary`
-          }
-          node.send(msg)
-        }
-        if (raw.SavedQueuesUpdateID && subscriptions.contentSonosPlaylists) {
-          const msg = [null, null, null, null, null]
-          msg[4] = {
-            'payload': raw.SavedQueuesUpdateID, raw,
-            'topic': `household/${player.host}/ContentDirectory/contentSonosPlaylists`
-          }
-          node.send(msg)
-        }
-        
-      })
-      debug('subscribed to ContentDirectoryService')
-
-      player.ContentDirectoryService.Events.on('error', (error) => {
-        // eslint-disable-next-line max-len
-        debug('error ContentDirectoryService on >>', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-      })
-    }
-  
     return true
   }
 
-  async function cancelAllSubscriptions (player) {
+  RED.nodes.registerType('sonosevents-household', sonosEventsHouseHoldNode)
 
-    // TODO check whether only for those with subscription or like this
-    await player.ZoneGroupTopologyService.Events.removeAllListeners('serviceEvent')    
-    await player.AlarmClockService.Events.removeAllListeners('serviceEvent')
-    await player.ContentDirectoryService.Events.removeAllListeners('serviceEvent')
+}
 
+async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
+
+  let errorCount = 0 // global to calc all errors
+  const msgMaster = [null, null, null, null, null, null, null, null]
+
+  // bind events
+  if (subscriptions.topology) {
+    await player.ZoneGroupTopologyService.Events.on('serviceEvent', sendMsgZoneGroup)
+    debug('subscribed to ZoneGroupTopologyService')
   }
+  if (subscriptions.alarmList) {
+    await player.AlarmClockService.Events.on('serviceEvent', sendMsgAlarmClock)
+    debug('subscribed to AlarmClockService')
+  }
+  if (subscriptions.contentMySonos
+    || subscriptions.contentMusicLibrary
+    || subscriptions.contentSonosPlaylists) {
+    await player.ContentDirectoryService.Events.on('serviceEvent', sendMsgContentDirectory)
+    debug('subscribed to ContentDirectoryService')
+  }
+
+  return true
+
+  // .............. sendMsg functions ...............
+  async function sendMsgZoneGroup (raw) {
+    try {
+      debug('new ZoneGroupTopologyService event >>', JSON.stringify(raw))
+      const payload = await improvedZoneData(raw, player.host)
+      const topic =  `household/${player.host}/zoneGroupTopology/topology`
+      const msg = msgMaster.slice()
+      msg[0] = { payload, raw, topic }        
+      node.send(msg)
+    } catch (error) {
+      errorCount++
+      node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      // eslint-disable-next-line max-len
+      node.debug(`error processing ZoneGroupTopology event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+    }
+  }
+
+  async function sendMsgAlarmClock (raw) {
+    try {
+      debug('new AlarmClockService event >>', JSON.stringify(raw))
+      const alarms = await player.AlarmClockService.ListAndParseAlarms()
+      const payload = raw
+      const topic = `household/${player.host}/alarmClock/alarmList`
+      const msg = msgMaster.slice()
+      msg[1] = { payload, alarms, topic }
+      node.send(msg)  
+    } catch (error) {
+      errorCount++
+      node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      // eslint-disable-next-line max-len
+      node.debug(`error processing AlarmClockService event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+    }
+  }
+
+  async function sendMsgContentDirectory (raw) {
+    let payload
+    let topic
+    try {
+      debug('new ContentDirectoryService event >>', JSON.stringify(raw))
+      const topicPrefix = `household/${player.host}/ContentDirectory/`
+      if (raw.FavoritesUpdateID && subscriptions.contentMySonos) {
+        const msg = msgMaster.slice()
+        // TODO check existence
+        payload = raw.FavoritesUpdateID
+        topic = topicPrefix + 'contentMySonos'
+        msg[2] = { payload, raw, topic }
+        node.send(msg)
+      }
+      if (raw.ShareListUpdateID && subscriptions.contentMusicLibrary) {
+        const msg = msgMaster.slice()
+        payload = raw.ShareListUpdateID
+        topic = topicPrefix + 'contentMusicLibrary'
+        msg[3] = { payload, raw, topic }
+        node.send(msg)
+      }
+      if (raw.SavedQueuesUpdateID && subscriptions.contentSonosPlaylists) {
+        const msg = msgMaster.slice()
+        payload = raw.SavedQueuesUpdateID
+        topic = topicPrefix + 'contentSonosPlaylists'
+        msg[4] = { payload, raw, topic }
+        node.send(msg)
+      }
+    } catch (error) {
+      errorCount++
+      node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      // eslint-disable-next-line max-len
+      node.debug(`error processing ContentDirectoryService event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+    }
+  }
+}
+
+async function cancelAllSubscriptions (player) {
+
+  // TODO check whether only for those with subscription or like this
+  await player.ZoneGroupTopologyService.Events.removeAllListeners('serviceEvent')    
+  await player.AlarmClockService.Events.removeAllListeners('serviceEvent')
+  await player.ContentDirectoryService.Events.removeAllListeners('serviceEvent')
+
 }

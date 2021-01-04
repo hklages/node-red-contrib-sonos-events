@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+
+### [0.0.12] 2021-01-04
+
+#### Changed
+
+- 8 outputs for every node (some for future use)
+
+- bug fixing
+
+- help and link to wiki
+
+- code restructuring
+
 ### [0.0.11] 2021-01-02
 
 #### Changed

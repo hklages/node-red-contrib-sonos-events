@@ -28,14 +28,14 @@
         value: false
       },
       outputs: { 
-        value: 5
+        value: 8
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#E56717',
     paletteLabel: 'household events',
-    outputLabels: ['topology','alarm list', 'contentMySonos', 'contentMusicLibrary', 'contentSonosPlaylists'],
+    outputLabels: ['topology','alarm list', 'contentMySonos', 'contentMusicLibrary', 'contentSonosPlaylists', 'future use', 'future use', 'future use'],
     label: function() {
       return 'household events'
     },
@@ -146,8 +146,10 @@
   </div>  
 </script>
 
-<!-- Help text (HTML) -->
+<<!-- Help text (HTML) -->
 <script type="text/html" data-help-name="sonosevents-household">
-  Under construction!
-
+  <p>Subscribe to household events. The player can be any player.<p>
+    
+  <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more about Events</a>
+    
 </script>

@@ -34,14 +34,14 @@
         value: true
       },
       outputs: { 
-        value: 5
+        value: 8
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#F87217',
     paletteLabel: 'group events',
-    outputLabels: ['content', 'contentCategory', 'playbackstate','groupVolume', 'groupMuteState'],
+    outputLabels: ['content', 'contentCategory', 'playbackstate','groupVolume', 'groupMuteState', 'future use', 'future use', 'future use'],
     label: function() {
       return 'group events'
     },
@@ -167,7 +167,9 @@
 </script>
 
 <!-- Help text (HTML) -->
-<script type="text/html" data-help-name="sonosevents-household">
-  Under construction!
-
+<script type="text/html" data-help-name="sonosevents-group">
+  <p>Subscribe to group events. The player must be a coordinator - only one per group.<p>
+    
+  <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more about Events</a>
+    
 </script>

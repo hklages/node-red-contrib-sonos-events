@@ -28,14 +28,14 @@
         value: false
       },
       outputs: { 
-        value: 5
+        value: 8
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#FF8040',
     paletteLabel: 'player events',
-    outputLabels: ['volume', 'mutestate','localGroupUuid', 'lineInConnected', 'micEnabled'],
+    outputLabels: ['volume', 'mutestate','localGroupUuid', 'lineInConnected', 'micEnabled', 'future use','future use','future use' ],
     label: function() {
       return 'player events';
     },
@@ -90,7 +90,6 @@
         margin-top: -3px !important;
     }
   </style>
-  
   
   <div id="main-props">
     <!-- Config node -->
@@ -149,6 +148,9 @@
 </script>
 
 <!-- Help text (HTML) -->
-<script type="text/html" data-help-name="sonosevents-household">
-  Help text
+<script type="text/html" data-help-name="sonosevents-player">
+  <p>Subscribe to player events. Don't use 2 for a single player.<p>
+    
+  <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more about Events</a>
+    
 </script>
