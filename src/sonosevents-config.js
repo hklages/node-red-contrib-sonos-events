@@ -10,7 +10,7 @@
  * @since 2021-01-02
 */
 
-const { discoverAllPlayer } = require('./Discovery.js')
+const { discoverAllPlayer, discoverAllCoordinators } = require('./Discovery.js')
 
 const debug = require('debug')('nrcse:config')
 
@@ -42,6 +42,18 @@ module.exports = function (RED) {
   RED.httpAdmin.get('/nrcse/searchDevices', function (req, response) {
       
     discoverAllPlayer()
+      .then((playerList) => {
+        response.json(playerList)
+      })
+      .catch((error) => {
+        debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+      })
+  })
+
+  // Endpoint to get list of available players
+  RED.httpAdmin.get('/nrcse/searchCoordinators', function (req, response) {
+      
+    discoverAllCoordinators()
       .then((playerList) => {
         response.json(playerList)
       })

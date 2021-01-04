@@ -164,16 +164,16 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
       const improved = await improvedGroupRenderingData(raw) 
       if (subscriptions.groupVolume) {
         const msg = msgMaster.slice()
-        payload = improved.groupMuteState
-        topic = topicPrefix + 'groupMuteState'
+        payload = improved.groupVolume
+        topic = topicPrefix + 'groupVolume'
         msg[3] = { payload, raw, topic }
         node.send(msg)
       }
       debug('new GroupRenderingControlService event')
       if (subscriptions.groupMuteState) {
         const msg = msgMaster.slice()
-        payload = improved.groupVolume
-        topic = topicPrefix + 'groupVolume'
+        payload = improved.groupMuteState
+        topic = topicPrefix + 'groupMuteState'
         msg[4] = { payload, raw, topic }
         node.send(msg)
       }

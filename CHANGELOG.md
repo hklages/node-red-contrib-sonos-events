@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.0.13] 2021-01-04
+
+#### Changed
+
+- discovery for coordinators
+
+- bugfix groupVolume/groupMute mixed up
 
 ### [0.0.12] 2021-01-04
 

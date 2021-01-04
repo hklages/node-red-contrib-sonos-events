@@ -37,5 +37,26 @@ module.exports = {
       }
     })
     return reducedList
+  },
+
+  discoverAllCoordinators: async function () {
+    // discover the first one an get all coordinators
+    // and thats very reliable -deterministic. Discovering 10 player might be time consuming
+    // Sonos player knew best the topology
+    const deviceDiscovery = new SonosDeviceDiscovery()
+    const firstPlayerData = await deviceDiscovery.SearchOne(1)
+    debug('first player found')
+    const firstPlayer = new SonosDevice(firstPlayerData.host)
+    const allGroups = await getGroupsAllFast(firstPlayer)
+    const coordinatorArray = allGroups.map((group) => {
+      return group[0]
+    })
+    const reducedList = coordinatorArray.map((item) => {
+      return {
+        'label': item.playerName,
+        'value': item.url.hostname
+      }
+    })
+    return reducedList
   }
 } 
