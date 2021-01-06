@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * This module handles all player related events.
  *
@@ -9,6 +7,8 @@
  * 
  * @since 2021-01-04
 */
+
+'use strict'
 
 const { SonosDevice, SonosEvents } = require('@svrooij/sonos/lib')
 const { isValidProperty } = require('./Helper')

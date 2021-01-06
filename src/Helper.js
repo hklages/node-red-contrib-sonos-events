@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * Collection of general purpose methods.
  *
@@ -9,6 +7,8 @@
  * 
  * @since 2021-01-02
 */
+
+'use strict'
 
 const debug = require('debug')('nrcse:Helper')
 

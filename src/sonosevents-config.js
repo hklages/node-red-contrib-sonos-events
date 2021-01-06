@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * This module is to define the configuration.
  *
@@ -9,6 +7,8 @@
  * 
  * @since 2021-01-02
 */
+
+'use strict'
 
 const { discoverAllPlayer, discoverAllCoordinators } = require('./Discovery.js')
 

@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * Routines for Discovery
  *
@@ -9,6 +7,8 @@
  * 
  * @since 2021-01-02
 */
+
+'use strict'
 
 const { getGroupsAllFast } = require('./Sonos-Commands.js')
 
@@ -23,7 +23,8 @@ module.exports = {
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
     // Sonos player knew best the topology
     const deviceDiscovery = new SonosDeviceDiscovery()
-    const firstPlayerData = await deviceDiscovery.SearchOne(1)
+    debug('starting discovery')
+    const firstPlayerData = await deviceDiscovery.SearchOne(5)
     debug('first player found')
     const firstPlayer = new SonosDevice(firstPlayerData.host)
     const allGroups = await getGroupsAllFast(firstPlayer)
@@ -44,7 +45,7 @@ module.exports = {
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
     // Sonos player knew best the topology
     const deviceDiscovery = new SonosDeviceDiscovery()
-    const firstPlayerData = await deviceDiscovery.SearchOne(1)
+    const firstPlayerData = await deviceDiscovery.SearchOne(5)
     debug('first player found')
     const firstPlayer = new SonosDevice(firstPlayerData.host)
     const allGroups = await getGroupsAllFast(firstPlayer)

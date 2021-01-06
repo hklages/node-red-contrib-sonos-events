@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * Collection of SONOS commands.
  *
@@ -9,14 +7,17 @@
  * 
  * @since 2021-01-02
 */
+
+'use strict'
+
+const PACKAGE_PREFIX = 'nrcse: '
+
 const { isTruthyAndNotEmptyString, isValidProperty, decodeHtml, isValidPropertyNotEmptyString
 } = require('./Helper.js')
 
 const parser = require('fast-xml-parser')
 
 const debug = require('debug')('nrcse:Sonos-Commands')
-
-const PACKAGE_PREFIX = 'nrcse: '
 
 module.exports = {
 

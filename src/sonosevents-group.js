@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-'use strict'
 
 /**
  * This module handles all group related events.
@@ -10,6 +8,8 @@
  * 
  * @since 2021-01-04
 */
+
+'use strict'
 
 const { improvedAvTransportData, improvedGroupRenderingData, isValidProperty, }
   = require('./Helper.js')
@@ -90,6 +90,7 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
   }
 
   if (subscriptions.groupVolume || subscriptions.groupVolume) {
+    // eslint-disable-next-line max-len
     coordinator.GroupRenderingControlService.Events.on('serviceEvent', sendMsgsGroupRenderingControl)
     debug('subscribed to GroupRenderingControlService')
   }
@@ -152,6 +153,7 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      // eslint-disable-next-line max-len
       node.debug(`error processing AVTransport event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
     }
   }
@@ -180,6 +182,7 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
+      // eslint-disable-next-line max-len
       node.debug(`error processing GroupRenderingControlService event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
     }
   }

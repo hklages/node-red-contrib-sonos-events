@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * This module handles all household related events.
  *
@@ -9,6 +7,8 @@
  * 
  * @since 2021-01-04
 */
+
+'use strict'
 
 const { improvedZoneData } = require('./Helper.js')
 const { SonosDevice } = require('@svrooij/sonos/lib')
