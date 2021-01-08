@@ -18,7 +18,7 @@ const debug = require('debug')('nrcse:Discovery')
 
 module.exports = {
 
-  discoverAllPlayer: async function () {
+  discoverAllPlayer: async () => {
     // discover the first one an get all others because we need also the player names
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
     // Sonos player knew best the topology

@@ -18,14 +18,30 @@ module.exports = {
     debug('method >>%s', 'transformAvTransportData')
 
     const content = {} 
-    let contentCategory = null // for those cases AVTransportURI is not given
+    // content
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
       content.avTransportUri = raw.AVTransportURI
       debug('avTransportURI >>%s', content.avTransportUri)
-      contentCategory = module.exports.getContentCategory(content.avTransportUri)
-      debug('contentCategory >>%s', contentCategory)
+      // eslint-disable-next-line max-len
+      content.contentCategory = module.exports.getContentCategory(content.avTransportUri)
     }
-
+    if (module.exports.isValidProperty(raw, ['raw.AVTransportURIMetaData', 'UpnpClass'])) {
+      content.avTransportUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
+      debug('title >>%s', content.title)
+    }
+    if (module.exports.isValidProperty(raw, ['raw.AVTransportURIMetaData', 'Title'])) {
+      content.avTransportTitle = raw.EnqueuedTransportURIMetaData.Title
+      debug('title >>%s', content.title)
+    }
+    
+    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
+      content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
+      debug('title >>%s', content.title)
+    }
+    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
+      content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
+      debug('title >>%s', content.title)
+    }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
       content.title = raw.CurrentTrackMetaData.Title
       debug('title >>%s', content.title)
@@ -41,6 +57,7 @@ module.exports = {
       content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
     }
     
+    // playbackstate
     let playbackstate
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
       playbackstate = raw.TransportState.toLowerCase()
@@ -48,7 +65,7 @@ module.exports = {
 
     // TODO What is with Enqueued data= those of the initial command to play the playlist, ....
  
-    return { content, contentCategory, playbackstate }
+    return { content, playbackstate }
   },
 
   improvedGroupRenderingData: async function (data) {
