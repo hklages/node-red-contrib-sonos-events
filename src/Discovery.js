@@ -45,7 +45,8 @@ module.exports = {
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
     // Sonos player knew best the topology
     const deviceDiscovery = new SonosDeviceDiscovery()
-    const firstPlayerData = await deviceDiscovery.SearchOne(5)
+    debug('start discovery for first player')
+    const firstPlayerData = await deviceDiscovery.SearchOne(3)
     debug('first player found')
     const firstPlayer = new SonosDevice(firstPlayerData.host)
     const allGroups = await getGroupsAllFast(firstPlayer)

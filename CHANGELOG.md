@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.0.14] 2021-01-08
+
+#### Changed
+
+- more content
+
+- devDependency update
+
 ### [0.0.13] 2021-01-04
 
 #### Changed
