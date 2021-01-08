@@ -19,6 +19,7 @@
       "sonosevents-player": "src/sonosevents-player.js",
       "sonosevents-group": "src/sonosevents-group.js",
       "sonosevents-household": "src/sonosevents-household.js"
+      
     }
   },
   "repository": {
