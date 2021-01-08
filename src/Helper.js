@@ -17,23 +17,17 @@ module.exports = {
   improvedAvTransportData: async function (raw) {
     debug('method >>%s', 'transformAvTransportData')
 
-    const content = {} 
-    // content
+    // avTransport
+    const avTransport = {}
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
-      content.avTransportUri = raw.AVTransportURI
-      debug('avTransportURI >>%s', content.avTransportUri)
+      avTransport.uri = raw.AVTransportURI
+      debug('avTransportURI >>%s', avTransport.uri)
       // eslint-disable-next-line max-len
-      content.contentCategory = module.exports.getContentCategory(content.avTransportUri)
+      avTransport.processingUnit = module.exports.getContentCategory(avTransport.uri)
     }
-    if (module.exports.isValidProperty(raw, ['raw.AVTransportURIMetaData', 'UpnpClass'])) {
-      content.avTransportUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
-      debug('title >>%s', content.title)
-    }
-    if (module.exports.isValidProperty(raw, ['raw.AVTransportURIMetaData', 'Title'])) {
-      content.avTransportTitle = raw.EnqueuedTransportURIMetaData.Title
-      debug('title >>%s', content.title)
-    }
-    
+   
+    // content
+    const content = {} 
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
       content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
       debug('title >>%s', content.title)
@@ -55,8 +49,7 @@ module.exports = {
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
       content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
-    }
-    
+    }  
     // playbackstate
     let playbackstate
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
@@ -65,7 +58,7 @@ module.exports = {
 
     // TODO What is with Enqueued data= those of the initial command to play the playlist, ....
  
-    return { content, playbackstate }
+    return { content, avTransport, playbackstate }
   },
 
   improvedGroupRenderingData: async function (data) {

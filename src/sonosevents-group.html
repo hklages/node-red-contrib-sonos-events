@@ -15,7 +15,7 @@
       content: { 
         value: true
       },
-      contentCategory: { 
+      avTransport: { 
         value: false
       },
       playbackstate: { 
@@ -41,7 +41,7 @@
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#F87217',
     paletteLabel: 'group events',
-    outputLabels: ['content', 'contentCategory', 'playbackstate','groupVolume', 'groupMuteState', 'future use', 'future use', 'future use'],
+    outputLabels: ['content', 'avTransport', 'playbackstate','groupVolume', 'groupMuteState', 'future use', 'future use', 'future use'],
     label: function() {
       return 'group events'
     },
@@ -122,7 +122,7 @@
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
           <label class="event-checkbox"><input type="checkbox" id="node-input-content" > Content </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-contentCategory" > Content category </label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-avTransport" > AVTransport </label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-playbackstate" > Playback state </label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-groupVolume"> Group volume </label>
           <label class="event-checkbox"><input type="checkbox" id="node-input-groupMuteState"> Group mute state </label>

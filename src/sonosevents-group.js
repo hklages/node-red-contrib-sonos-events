@@ -33,7 +33,7 @@ module.exports = function (RED) {
 
     const subscriptions = {
       content: config.content,
-      contentCategory: config.contentCategory,
+      avTransport: config.avTransport,
       playbackstate: config.playbackstate,
       groupMuteState: config.groupMuteState,
       groupVolume: config.groupVolume,
@@ -136,10 +136,10 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
         node.send(msg)
       }
       // check !==null for those cases AVTransportURI is not available
-      if (subscriptions.contentCategory && improved.contentCategory !== null) {
+      if (subscriptions.avTransport && improved.avTransport.uri !== undefined) {
         const msg = msgMaster.slice()
-        payload = improved.contentCategory
-        topic = topicPrefix + 'contentCategory'
+        payload = improved.avTransport
+        topic = topicPrefix + 'avTransport'
         msg[1] = { payload, raw, topic }
         node.send(msg)
       }
