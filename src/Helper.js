@@ -18,47 +18,67 @@ module.exports = {
     debug('method >>%s', 'transformAvTransportData')
 
     // avTransport
-    const avTransport = {}
+
+    // ... usually a bundle
+    const basicsBundle = {}
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
-      avTransport.uri = raw.AVTransportURI
-      debug('avTransportURI >>%s', avTransport.uri)
+      basicsBundle.uri = raw.AVTransportURI
+      debug('avTransportURI >>%s', basicsBundle.uri)
       // eslint-disable-next-line max-len
-      avTransport.processingUnit = module.exports.getContentCategory(avTransport.uri)
+      basicsBundle.processingUnit = module.exports.getProcessingUnit(basicsBundle.uri)
     }
-   
-    // content
-    const content = {} 
-    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
-      content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
-      debug('title >>%s', content.title)
+    if (module.exports.isValidProperty(raw, ['CurrentTransportActions'])) {
+      basicsBundle.actions = raw.CurrentTransportActions // Stop,Next, ...
     }
-    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
-      content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
-      debug('title >>%s', content.title)
-    }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
-      content.title = raw.CurrentTrackMetaData.Title
-      debug('title >>%s', content.title)
-    }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
-      content.artist = raw.CurrentTrackMetaData.Artist
+    if (module.exports.isValidProperty(raw, ['CurrentValidPlayModes'])) {
+      basicsBundle.validPlayModes = raw.CurrentValidPlayModes 
     }
 
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
-      content.album =raw.CurrentTrackMetaData.Album
-    }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
-      content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
-    }  
-    // playbackstate
-    let playbackstate
+    // ... playback state - single item
+    let playbackstate = null
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
       playbackstate = raw.TransportState.toLowerCase()
     }
+    
+    // ... current queue play mode - single item
+    let playMode = null
+    if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
+      playMode = raw.CurrentPlayMode // queue playmode
+    }
 
-    // TODO What is with Enqueued data= those of the initial command to play the playlist, ....
+    // ... crossfade - single item
+    let crossfade = null
+    if (module.exports.isValidProperty(raw, ['CurrentCrossfadeMode'])) {
+      crossfade = (raw.CurrentCrossfadeMode ? 'on' : 'off')
+    }
+
+    // content
+    const contentBundle = {} 
+    // Enqueued is the original command - has impact on AVTransport and Track, .. 
+    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
+      contentBundle.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
+      debug('title >>%s', contentBundle.enqueuedUpnp)
+    }
+    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
+      contentBundle.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
+      debug('title >>%s', contentBundle.enqueuedTitle)
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
+      contentBundle.title = raw.CurrentTrackMetaData.Title
+      debug('title >>%s', contentBundle.title)
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
+      contentBundle.artist = raw.CurrentTrackMetaData.Artist
+    }
+
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
+      contentBundle.album =raw.CurrentTrackMetaData.Album
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
+      contentBundle.artUri = raw.CurrentTrackMetaData.AlbumArtUri
+    }  
  
-    return { content, avTransport, playbackstate }
+    return { basicsBundle, playbackstate, playMode, crossfade, contentBundle }
   },
 
   improvedGroupRenderingData: async function (data) {
@@ -129,7 +149,7 @@ module.exports = {
    * 
    * @throws nothing
    */
-  getContentCategory: (avTransportUri) => {
+  getProcessingUnit: (avTransportUri) => {
     debug('method >>%s', 'internalSource')
 
     // TODO arg is string and not empty
@@ -138,7 +158,7 @@ module.exports = {
       source = 'queue'
     } else if (avTransportUri.startsWith('x-sonos-htastream:')) {
       source = 'tv'
-    } else if (avTransportUri.startsWith('x-rincon:')) {
+    } else if (avTransportUri.startsWith('x-rincon:RINCON')) {
       source = 'joiner'
     } else if (avTransportUri.startsWith('x-rincon-stream:')) {
       source = 'lineIn'

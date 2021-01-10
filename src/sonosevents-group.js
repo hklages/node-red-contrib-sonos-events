@@ -128,22 +128,23 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
       const topicPrefix = `group/${coordinator.host}/AVTransportService/`
       // TODO check property improved.contentCategory exist als plabackstate also content
       const improved = await improvedAvTransportData(raw)
+      payload = {}
       if (subscriptions.content) {
         const msg = msgMaster.slice()
-        payload = improved.content
+        payload = improved.contentBundle
         topic = topicPrefix + 'content'
         msg[0] = { payload, raw, topic, 'properties': Object.keys(raw) }
         node.send(msg)
       }
       // check !==null for those cases AVTransportURI is not available
-      if (subscriptions.avTransport && improved.avTransport.uri !== undefined) {
+      if (subscriptions.avTransport && improved.basicsBundle.uri !== undefined) {
         const msg = msgMaster.slice()
-        payload = improved.avTransport
+        payload = improved.basicsBundle
         topic = topicPrefix + 'avTransport'
         msg[1] = { payload, raw, topic }
         node.send(msg)
       }
-      if (subscriptions.playbackstate) {
+      if (subscriptions.playbackstate !== null) {
         const msg = msgMaster.slice()
         payload = improved.playbackstate
         topic = topicPrefix + 'playbackstate'

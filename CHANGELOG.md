@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.0.16] 2021-01-010
+
+#### Changed
+
+- httpNode instead of Admin
+
+- added CurrentTransportActions, Playmode to AVTransport
+
 ### [0.0.15] 2021-01-08
 
 #### Changed

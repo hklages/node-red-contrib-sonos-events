@@ -39,7 +39,7 @@ module.exports = function (RED) {
   // .......................................................................................
 
   // Endpoint to get list of available players
-  RED.httpAdmin.get('/nrcse/searchDevices', function (req, response) {
+  RED.httpNode.get('/nrcse/searchDevices', function (req, response) {
       
     discoverAllPlayer()
       .then((playerList) => {
@@ -51,7 +51,7 @@ module.exports = function (RED) {
   })
 
   // Endpoint to get list of available players
-  RED.httpAdmin.get('/nrcse/searchCoordinators', function (req, response) {
+  RED.httpNode.get('/nrcse/searchCoordinators', function (req, response) {
       
     discoverAllCoordinators()
       .then((playerList) => {
