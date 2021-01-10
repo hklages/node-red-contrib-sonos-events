@@ -51,7 +51,7 @@ module.exports = function (RED) {
   })
 
   // Endpoint to get list of available players
-  RED.httpNode.get('/nrcse/searchCoordinators', function (req, response) {
+  RED.httpNode.get('nrcseSearchCoordinators', function (req, response) {
       
     discoverAllCoordinators()
       .then((playerList) => {
