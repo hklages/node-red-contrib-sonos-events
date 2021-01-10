@@ -48,7 +48,7 @@
         $('#node-lookup-playerHostname-icon').removeClass('fa-search')
         $('#node-lookup-playerHostname-icon').addClass('spinner')
         $('#node-input-playerHostname').addClass('disabled')
-        $.getJSON('/nrcse/searchDevices', function(sonosPlayer) {
+        $.getJSON('nrcse/searchDevices', function(sonosPlayer) {
           $('#node-lookup-playerHostname-icon').addClass('fa-search')
           $('#node-lookup-playerHostname-icon').removeClass('spinner')
           $('#node-lookup-playerHostname').removeClass('disabled')

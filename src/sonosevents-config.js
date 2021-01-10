@@ -39,26 +39,50 @@ module.exports = function (RED) {
   // .......................................................................................
 
   // Endpoint to get list of available players
-  RED.httpNode.get('/nrcse/searchDevices', function (req, response) {
-      
-    discoverAllPlayer()
-      .then((playerList) => {
-        response.json(playerList)
-      })
-      .catch((error) => {
-        debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-      })
-  })
+  // RED.httpNode.get('/nrcse/searchDevices', function (req, response) {
+  // discoverAllPlayer()
+  //   .then((playerList) => {
+  //     response.json(playerList)
+  //   })
+  //   .catch((error) => {
+  //     debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+  //   })
+  // })
 
   // Endpoint to get list of available players
-  RED.httpNode.get('nrcseSearchCoordinators', function (req, response) {
+  // RED.httpNode.get('/nrcse/searchCoordinators', function (req, response) {
+  //   discoverAllCoordinators()
+  //     .then((playerList) => {
+  //       response.json(playerList)
+  //     })
+  //     .catch((error) => {
+  //       debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+  //     })
+  // })
+
+  RED.httpNode.get('/nrcse/*', function (req, response) {
+    switch (req.params[0]) {
+    case 'searchDevices':
+      discoverAllPlayer()
+        .then((playerList) => {
+          response.json(playerList)
+        })
+        .catch((error) => {
+          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
+      break
       
-    discoverAllCoordinators()
-      .then((playerList) => {
-        response.json(playerList)
-      })
-      .catch((error) => {
-        debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-      })
+    case 'searchCoordinators':
+      discoverAllCoordinators()
+        .then((playerList) => {
+          response.json(playerList)
+        })
+        .catch((error) => {
+          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
+        
+      break
+    }   
   })
+
 }

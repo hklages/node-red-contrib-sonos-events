@@ -4,14 +4,13 @@ All notable changes to this project are documented in this file.
 
 All notable changes to this project are documented in this file.
 
-### [0.0.17] 2021-01-010
+### [0.0.17/18/19] 2021-01-10
 
 #### Changed
 
-- httpNode group nrcseSearchCoordinators
+- httpNode group and endpoint
 
-
-### [0.0.16] 2021-01-010
+### [0.0.16] 2021-01-10
 
 #### Changed
 
