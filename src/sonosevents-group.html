@@ -12,36 +12,36 @@
         value: '',
         required: true
       },
-      content: { 
+      avTransportRaw: { 
         value: true
       },
-      avTransport: { 
+      basics: { 
         value: false
+      },
+      content: { 
+        value: false
+      },
+      groupRenderingControlRaw: { 
+        value: true
       },
       playbackstate: { 
         value: false
       },
-      groupMuteState: { 
+      groupMutestate: { 
         value: false
       },
       groupVolume: { 
         value: false
       },
-      ignoreTransition: { 
-        value: true
-      },
-      ignoreZpstr: { 
-        value: true
-      },
       outputs: { 
-        value: 8
+        value: 9
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#F87217',
     paletteLabel: 'group events',
-    outputLabels: ['content', 'avTransport', 'playbackstate','groupVolume', 'groupMuteState', 'future use', 'future use', 'future use'],
+    outputLabels: ['avTransportRaw', 'basics', 'content', 'playbackstate', 'future use', 'groupRenderingControlRaw','groupVolume', 'groupMutestate',  'future use'],
     label: function() {
       return 'group events'
     },
@@ -114,38 +114,28 @@
       <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
     </div>
     <div class="form-tips">
-      Player:  Use the search button to discover SONOS player in your local network and select a coordinator. On some systems you have to open ports.
+      Player:  Use the search button to discover SONOS player in your local network and select a COORDINATOR.
     </div><br>
 
     <!-- Events-->
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          <label class="event-checkbox"><input type="checkbox" id="node-input-content" > Content </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-avTransport" > AVTransport </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-playbackstate" > Playback state </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-groupVolume"> Group volume </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-groupMuteState"> Group mute state </label>
+        AVTransportService  
+        <label class="event-checkbox"><input type="checkbox" id="node-input-avTransportRaw" > All events, raw data </label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-basics" > AVTransport </label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-content" > Content </label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-playbackstate" > Playback state </label><br>
+        GroupRenderingControlService
+        <label class="event-checkbox"><input type="checkbox" id="node-input-groupRenderingControlRaw"> All events, raw data </label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-groupVolume"> Group volume </label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-groupMutestate"> Group mute state </label>
       </div>
     </div>
 
     <div class="form-tips" style="width: auto;">
-      Events: Each item is send via a single message (no packages) with topic group\{playerHostname}\{service}\{item}
+      Events: Each item is send via a single message with topic group\{playerHostname}\{service}\{item}. The msg may comprise several properties.
      </div><br>
-
-    <!-- Filter for output 1-->
-    <div class="form-row">
-      <label for="node-input-eventsFilter" style="width: 25%;"><i class="fa fa-filter"></i> Filter</label>
-      <div style="width: auto; display: inline-block; vertical-align: text-top;">
-        <b>Ignore output 1 related events with </b>
-        <label class="event-checkbox"><input type="checkbox" id="node-input-ignoreTransition" > playback state "transition" </label>
-        <label class="event-checkbox"><input type="checkbox" id="node-input-ignoreZpstr" > ZPSTR string </label>
-      </div>
-    </div>
-    
-    <div class="form-tips" style="width: auto;">
-      Filter: You may ignore all message, where the player is "busy": playback state TRANSITION or when some parts of text are still not returned from a service (ZPRSTR_)
-    </div><br>
 
     <!-- Amount of outputs -->
     <div class="form-row">

@@ -11,7 +11,7 @@
 
 'use strict'
 
-const { improvedAvTransportData, improvedGroupRenderingData, isValidProperty, }
+const { improvedAvTransportData, improvedGroupRenderingData }
   = require('./Helper.js')
 
 const { SonosDevice } = require('@svrooij/sonos/lib')
@@ -32,19 +32,17 @@ module.exports = function (RED) {
     node.status({})
 
     const subscriptions = {
+      avTransportRaw: config.avTransportRaw,
+      basics: config.basics,
       content: config.content,
-      avTransport: config.avTransport,
       playbackstate: config.playbackstate,
-      groupMuteState: config.groupMuteState,
-      groupVolume: config.groupVolume,
-      ignoreTransition: config.ignoreTransition,
-      ignoreZpstr: config.ignoreZpstr
+      groupRenderingControlRaw: config.groupRenderingControlRaw,
+      groupMutestate: config.groupMutestate,
+      groupVolume: config.groupVolume
     }
 
     // create new player from input such as 192.168.178.37
     const coordinator = new SonosDevice(config.playerHostname)
-
-    //TODO in dialog should be mentioned that coordinator!
 
     // async wrapper, status and error handling
     asyncSubscribeToMultipleEvents(node, subscriptions, coordinator)
@@ -84,12 +82,16 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
   const msgMaster = [null, null, null, null, null, null, null, null]
 
   // bind events
-  if (subscriptions.content || subscriptions.contentCategory || subscriptions.playbackstate) {
+  if (subscriptions.avTransportRaw
+    || subscriptions.basics
+    || subscriptions.content 
+    || subscriptions.playbackstate) {
     coordinator.AVTransportService.Events.on('serviceEvent', sendMsgsAVTransport)
     debug('subscribed to AVTransportService')
   }
 
-  if (subscriptions.groupVolume || subscriptions.groupVolume) {
+  // eslint-disable-next-line max-len
+  if (subscriptions.groupRenderingControlRaw || subscriptions.groupVolume || subscriptions.groupMutestate) {
     // eslint-disable-next-line max-len
     coordinator.GroupRenderingControlService.Events.on('serviceEvent', sendMsgsGroupRenderingControl)
     debug('subscribed to GroupRenderingControlService')
@@ -98,59 +100,54 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
   return true
 
   // .............. sendMsg functions ...............
-  // TODO msg[0] ... msg[2] should use parameter! - bind?
+  // only output to requested output lines, prepare data
+  // uses global node
   async function sendMsgsAVTransport (raw) {
-    let payload
-    let topic
+    debug('new AVTransportService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 0
     try {
-      debug('new AVTransportService event')
-      // Filter playback state TRANSITION if requested if requested
-      if (isValidProperty(raw, ['TransportState'])) {
-        if (raw.TransportState === 'TRANSITIONING' && subscriptions.ignoreTransition) {
-          debug('no output send as TRANSITION detected')
-          return true
-        }
-      }
-  
-      //Filter Check Album, title Artist with ZPSTR string        
-      ['Title', 'Album', 'Artist'].forEach(topic => {
-        let item
-        if (isValidProperty(raw, ['CurrentTrackMetaData', topic])) {
-          item = raw.CurrentTrackMetaData[topic]
-          if (typeof item === 'string' & item.startsWith('ZPSTR_')) {
-            debug('no output send as ZPSTR_ detected in >>%s', topic)
-            return true
-          }
-        }
-      })
-
       // define msg s
       const topicPrefix = `group/${coordinator.host}/AVTransportService/`
-      // TODO check property improved.contentCategory exist als plabackstate also content
       const improved = await improvedAvTransportData(raw)
-      payload = {}
-      if (subscriptions.content) {
+      
+      if (subscriptions.avTransportRaw) {
         const msg = msgMaster.slice()
-        payload = improved.contentBundle
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+      
+      if (subscriptions.basics && improved.basics !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.basics
+        topic = topicPrefix + 'basics'
+        msg[msgIndex] = { payload, raw, topic }
+        node.send(msg)  
+      }
+      msgIndex++
+      
+      if (subscriptions.content && improved.content !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.content
         topic = topicPrefix + 'content'
-        msg[0] = { payload, raw, topic, 'properties': Object.keys(raw) }
+        msg[msgIndex] = { payload, raw, topic, 'properties': Object.keys(raw) }
         node.send(msg)
       }
-      // check !==null for those cases AVTransportURI is not available
-      if (subscriptions.avTransport && improved.basicsBundle.uri !== undefined) {
-        const msg = msgMaster.slice()
-        payload = improved.basicsBundle
-        topic = topicPrefix + 'avTransport'
-        msg[1] = { payload, raw, topic }
-        node.send(msg)
-      }
-      if (subscriptions.playbackstate !== null) {
+      msgIndex++
+      
+      if (subscriptions.playbackstate && subscriptions.playbackstate !== null) {
         const msg = msgMaster.slice()
         payload = improved.playbackstate
         topic = topicPrefix + 'playbackstate'
-        msg[2] = { payload, raw, topic }
+        msg[msgIndex] = { payload, raw, topic }
         node.send(msg)
       }
+      msgIndex++
+      
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
@@ -159,27 +156,44 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
     }
   }
 
+  // only output to requested output lines, prepare data
+  // uses global node
   async function sendMsgsGroupRenderingControl (raw) {
-    let payload
-    let topic
+    debug('new GroupRenderingControlService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 5
     try {
       const topicPrefix = `group/${coordinator.host}/groupRenderingControl/`
       const improved = await improvedGroupRenderingData(raw) 
-      if (subscriptions.groupVolume) {
+
+      if (subscriptions.groupRenderingControlRaw) {
+        const msg = msgMaster.slice()
+        payload = raw
+        topic = topicPrefix + 'Raw'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+
+      if (subscriptions.groupVolume && improved.groupVolume !== null) {
         const msg = msgMaster.slice()
         payload = improved.groupVolume
         topic = topicPrefix + 'groupVolume'
-        msg[3] = { payload, raw, topic }
+        msg[msgIndex] = { payload, raw, topic }
         node.send(msg)
       }
-      debug('new GroupRenderingControlService event')
-      if (subscriptions.groupMuteState) {
+      msgIndex++
+      
+      if (subscriptions.groupMutestate && improved.groupMutestate !== null) {
         const msg = msgMaster.slice()
-        payload = improved.groupMuteState
-        topic = topicPrefix + 'groupMuteState'
-        msg[4] = { payload, raw, topic }
+        payload = improved.groupMutestate
+        topic = topicPrefix + 'groupMutestate'
+        msg[msgIndex] = { payload, raw, topic }
         node.send(msg)
       }
+      msgIndex++
+
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })

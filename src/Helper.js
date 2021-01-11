@@ -17,21 +17,68 @@ module.exports = {
   improvedAvTransportData: async function (raw) {
     debug('method >>%s', 'transformAvTransportData')
 
-    // avTransport
-
-    // ... usually a bundle
-    const basicsBundle = {}
+    // ... bundle avTransportBasics
+    let basics = {}
+    let basicsTrue = false
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
-      basicsBundle.uri = raw.AVTransportURI
-      debug('avTransportURI >>%s', basicsBundle.uri)
+      basics.uri = raw.AVTransportURI
+      debug('avTransportURI >>%s', basics.uri)
+      basicsTrue = true
       // eslint-disable-next-line max-len
-      basicsBundle.processingUnit = module.exports.getProcessingUnit(basicsBundle.uri)
+      basics.processingUnit = module.exports.getProcessingUnit(basics.uri)
     }
     if (module.exports.isValidProperty(raw, ['CurrentTransportActions'])) {
-      basicsBundle.actions = raw.CurrentTransportActions // Stop,Next, ...
+      basics.actions = raw.CurrentTransportActions // Stop,Next, ...
+      basicsTrue = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentValidPlayModes'])) {
-      basicsBundle.validPlayModes = raw.CurrentValidPlayModes 
+      basics.validPlayModes = raw.CurrentValidPlayModes 
+      basicsTrue = true
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
+      basics.playMode = raw.CurrentPlayMode // queue play mode
+      basicsTrue = true
+    }
+    // destroy object if no items found
+    if (!basicsTrue) { 
+      basics = null
+    }
+
+    // content
+    let content = {} 
+    let contentTrue = false
+    // Enqueued is the original command - has impact on AVTransport and Track, .. 
+    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
+      content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
+      debug('title >>%s', content.enqueuedUpnp)
+      contentTrue = true
+    }
+    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
+      content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
+      debug('title >>%s', content.enqueuedTitle)
+      contentTrue = true
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
+      content.title = raw.CurrentTrackMetaData.Title
+      debug('title >>%s', content.title)
+      contentTrue = true
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
+      content.artist = raw.CurrentTrackMetaData.Artist
+      contentTrue = true
+    }
+
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
+      content.album = raw.CurrentTrackMetaData.Album
+      contentTrue = true
+    }
+    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
+      content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
+      contentTrue = true
+    }  
+    // destroy object if no items found
+    if (!contentTrue) { 
+      content = null
     }
 
     // ... playback state - single item
@@ -39,62 +86,25 @@ module.exports = {
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
       playbackstate = raw.TransportState.toLowerCase()
     }
-    
-    // ... current queue play mode - single item
-    let playMode = null
-    if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
-      playMode = raw.CurrentPlayMode // queue playmode
-    }
-
-    // ... crossfade - single item
-    let crossfade = null
-    if (module.exports.isValidProperty(raw, ['CurrentCrossfadeMode'])) {
-      crossfade = (raw.CurrentCrossfadeMode ? 'on' : 'off')
-    }
-
-    // content
-    const contentBundle = {} 
-    // Enqueued is the original command - has impact on AVTransport and Track, .. 
-    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
-      contentBundle.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
-      debug('title >>%s', contentBundle.enqueuedUpnp)
-    }
-    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
-      contentBundle.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
-      debug('title >>%s', contentBundle.enqueuedTitle)
-    }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
-      contentBundle.title = raw.CurrentTrackMetaData.Title
-      debug('title >>%s', contentBundle.title)
-    }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
-      contentBundle.artist = raw.CurrentTrackMetaData.Artist
-    }
-
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
-      contentBundle.album =raw.CurrentTrackMetaData.Album
-    }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
-      contentBundle.artUri = raw.CurrentTrackMetaData.AlbumArtUri
-    }  
  
-    return { basicsBundle, playbackstate, playMode, crossfade, contentBundle }
+    return { basics, content, playbackstate  }
   },
 
   improvedGroupRenderingData: async function (data) {
     debug('method >>%s', 'transformGroupRenderingData')
-    const improved = {}
+    
+    let groupMutestate = null
     if (module.exports.isValidProperty(data, ['GroupMute'])) {
-      // TODO what is right groupMuteState or groupMutestate
-      improved.groupMuteState = (data.GroupMute ? 'on' : 'off')
-      debug('groupMuteState >>%s', improved.groupMuteState)
+      groupMutestate = (data.GroupMute ? 'on' : 'off')
+      debug('groupMuteState >>%s', groupMutestate)
     }
+
+    let groupVolume = null
     if (module.exports.isValidProperty(data, ['GroupVolume'])) {
-      // TODO check integer
-      improved.groupVolume = data.GroupVolume
-      debug('groupVolume >>%s', improved.groupVolume)
+      groupVolume = String(data.GroupVolume)
+      debug('groupVolume >>%s', groupVolume)
     }
-    return improved
+    return { groupVolume, groupMutestate }
   },
 
   improvedZoneData: async function (raw, playerHostname) {

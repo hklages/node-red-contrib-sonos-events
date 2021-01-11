@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 All notable changes to this project are documented in this file.
 
+### [0.0.20] 2021-01-11
+
+#### Changed
+
+- group now with new outputs
+
 ### [0.0.17/18/19] 2021-01-10
 
 #### Changed
