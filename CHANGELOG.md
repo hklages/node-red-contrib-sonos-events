@@ -2,15 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
-All notable changes to this project are documented in this file.
 
-### [0.0.20] 2021-01-11
+### [0.0.20] 2021-01-12
 
 #### Changed
 
 - group now with new events/outputs
 
-- player with new events/ outputs 
+- player with new events/ outputs
 
 - household with new events/outputs
 
