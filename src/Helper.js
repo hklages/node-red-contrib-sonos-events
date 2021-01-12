@@ -14,139 +14,171 @@ const debug = require('debug')('nrcse:Helper')
 
 module.exports = {
 
+  improvedAudiIn: async function (raw) {
+    debug('method >>%s', 'improvedAudiIn')
+    
+    const improved = {}
+
+    improved.playing = null
+    if (module.exports.isValidProperty(raw, ['Playing'])) {
+      improved.playing = raw.Playing
+    }
+
+    return improved
+  },
+
   improvedAvTransportData: async function (raw) {
     debug('method >>%s', 'transformAvTransportData')
 
+    const improved = {}
+
     // ... bundle avTransportBasics
-    let basics = {}
+    improved.basics = {}
     let basicsTrue = false
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
-      basics.uri = raw.AVTransportURI
-      debug('avTransportURI >>%s', basics.uri)
+      improved.basics.uri = raw.AVTransportURI
+      debug('avTransportURI >>%s', improved.basics.uri)
       basicsTrue = true
       // eslint-disable-next-line max-len
-      basics.processingUnit = module.exports.getProcessingUnit(basics.uri)
+      improved.basics.processingUnit = module.exports.getProcessingUnit(improved.basics.uri)
     }
     if (module.exports.isValidProperty(raw, ['CurrentTransportActions'])) {
-      basics.actions = raw.CurrentTransportActions // Stop,Next, ...
+      improved.basics.actions = raw.CurrentTransportActions // Stop,Next, ...
       basicsTrue = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentValidPlayModes'])) {
-      basics.validPlayModes = raw.CurrentValidPlayModes 
+      improved.basics.validPlayModes = raw.CurrentValidPlayModes 
       basicsTrue = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
-      basics.playMode = raw.CurrentPlayMode // queue play mode
+      improved.basics.playMode = raw.CurrentPlayMode // queue play mode
       basicsTrue = true
     }
     // destroy object if no items found
     if (!basicsTrue) { 
-      basics = null
+      improved.basics = null
     }
 
-    // content
-    let content = {} 
+    // bundle content
+    improved.content = {} 
     let contentTrue = false
     // Enqueued is the original command - has impact on AVTransport and Track, .. 
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
-      content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
-      debug('title >>%s', content.enqueuedUpnp)
+      improved.content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
+      debug('title >>%s', improved.content.enqueuedUpnp)
       contentTrue = true
     }
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
-      content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
-      debug('title >>%s', content.enqueuedTitle)
+      improved.content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
+      debug('title >>%s', improved.content.enqueuedTitle)
       contentTrue = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
-      content.title = raw.CurrentTrackMetaData.Title
-      debug('title >>%s', content.title)
+      improved.content.title = raw.CurrentTrackMetaData.Title
+      debug('title >>%s', improved.content.title)
       contentTrue = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
-      content.artist = raw.CurrentTrackMetaData.Artist
+      improved.content.artist = raw.CurrentTrackMetaData.Artist
       contentTrue = true
     }
 
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
-      content.album = raw.CurrentTrackMetaData.Album
+      improved.content.album = raw.CurrentTrackMetaData.Album
       contentTrue = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
-      content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
+      improved.content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
       contentTrue = true
     }  
     // destroy object if no items found
     if (!contentTrue) { 
-      content = null
+      improved.content = null
     }
 
     // ... playback state - single item
-    let playbackstate = null
+    improved.playbackstate = null
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
-      playbackstate = raw.TransportState.toLowerCase()
+      improved.playbackstate = raw.TransportState.toLowerCase()
     }
  
-    return { basics, content, playbackstate  }
+    return improved
   },
 
-  improvedGroupRenderingData: async function (data) {
+  improvedDeviceProperties: async function (raw) {
+    debug('method >>%s', 'improvedDeviceProperties')
+    
+    const improved = {}
+
+    improved.micEnabled = null
+    if (module.exports.isValidProperty(raw, ['MicEnabled'])) {
+      improved.micEnabled = (raw.MicEnabled === 1)
+    }
+
+    return improved
+  },
+
+  improvedGroupRenderingData: async function (raw) {
     debug('method >>%s', 'transformGroupRenderingData')
     
-    let groupMutestate = null
-    if (module.exports.isValidProperty(data, ['GroupMute'])) {
-      groupMutestate = (data.GroupMute ? 'on' : 'off')
-      debug('groupMuteState >>%s', groupMutestate)
+    const improved = {}
+
+    improved.groupMutestate = null
+    if (module.exports.isValidProperty(raw, ['GroupMute'])) {
+      improved.groupMutestate = (raw.GroupMute ? 'on' : 'off')
+      debug('groupMuteState >>%s', improved.groupMutestate)
     }
 
-    let groupVolume = null
-    if (module.exports.isValidProperty(data, ['GroupVolume'])) {
-      groupVolume = String(data.GroupVolume)
-      debug('groupVolume >>%s', groupVolume)
+    improved.groupVolume = null
+    if (module.exports.isValidProperty(raw, ['GroupVolume'])) {
+      improved.groupVolume = String(raw.GroupVolume)
+      debug('groupVolume >>%s', improved.groupVolume)
     }
-    return { groupVolume, groupMutestate }
+    
+    return improved
   },
 
-  improvedZoneData: async function (raw, playerHostname) {
-    debug('method >>%s', 'improvedZoneData')
+  improvedGroupManagementService: async function (raw) {
+    debug('method >>%s', 'improvedGroupManagementService')
+    
     const improved = {}
-    if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
-      const allGroupArray = raw.ZoneGroupState
-      if (!Array.isArray(allGroupArray)) {
-        throw new Error('nrcse error: ZoneGroupState is not array')
-      }
-      // Get group coordinator name and size
-      let foundGroupIndex = -1
-      for (let iGroups = 0; iGroups < allGroupArray.length; iGroups++) {
-        if (!Array.isArray(allGroupArray[iGroups].members)) {
-          throw new Error('nrcse error: members is not array')
-        }
-        for (let iMembers = 0; iMembers < allGroupArray[iGroups].members.length; iMembers++) {
-          if (!module.exports.isValidProperty(allGroupArray[iGroups].members[iMembers], ['host'])) {
-            throw new Error('nrcse error: member does not have host property')
-          }
-          if (playerHostname === allGroupArray[iGroups].members[iMembers].host) { // host = hostname
-            foundGroupIndex = iGroups
-            break
-          }
-        }
-        if (foundGroupIndex > -1) {
-          break
-        }
-      }
 
-      if (foundGroupIndex === -1) {
-        throw new Error('nrcse error: could not find SONOS player name in list')
-      }
-
-      improved.groupName = allGroupArray[foundGroupIndex].name
-      improved.coordinatorName = allGroupArray[foundGroupIndex].coordinator.name
-      improved.coordinatorHostname = allGroupArray[foundGroupIndex].coordinator.host
-      improved.groupSize = allGroupArray[foundGroupIndex].members.length
-      improved.groupMemberNames = allGroupArray[foundGroupIndex].members.map((member) => {
-        return member.name // as this name comes from sonos-ts 
-      })
+    improved.localGroupUuid = null
+    if (module.exports.isValidProperty(raw, ['LocalGroupUUID'])) {
+      improved.localGroupUuid = raw.LocalGroupUUID
     }
+
+    return improved
+  },
+
+  improvedRenderingControl: async function (raw) {
+    debug('method >>%s', 'improvedRenderingControl')
+    
+    const improved = {}
+    
+    improved.volume = null
+    if (module.exports.isValidProperty(raw, ['Volume', 'Master'])) {
+      improved.volume = String(raw.Volume.Master)
+    }
+
+    improved.mutestate = null
+    if (module.exports.isValidProperty(raw, ['Mute', 'Master'])) {
+      improved.mutestate = (raw.Mute.Master? 'on' : 'off')
+    }
+
+    return improved
+  },
+
+  improvedZoneData: async function (raw) {
+    debug('method >>%s', 'improvedZoneData')
+    
+    const improved = {}
+
+    improved.allGroups = null
+    if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
+      improved.allGroups = raw.ZoneGroupState
+    }
+
     return improved 
   },
 
@@ -178,27 +210,43 @@ module.exports = {
       
     return source
   },
-
+  
+  encodeHtmlEntity: (htmlData) => {
+    // htmlData string, not null, not undefined
+    // works with empty string
+    return String(htmlData).replace(/[<>"'&]/g, singleChar => {
+      switch (singleChar) {
+      case '<': return '&lt;'
+      case '>': return '&gt;'
+      case '"': return '&quot;'
+      case '\'': return '&apos;'
+      case '&': return '&amp;'
+      }
+    })
+  },
+   
   /** Decodes some HTML special characters such as &lt; and others. 
    * @param  {string} htmlData the string to be decode
    * 
    * @returns {string} decodes string
    * 
    * @throws nothing
+   * 
+   * @since 2021-01-12
    */
-  decodeHtml: (htmlData) => {
-    debug('method >>%s', 'decodeHtml')
-    const decoded = String(htmlData).replace(/&lt;|&gt;|&amp;|&apos;|&quot;/g, (substring) => {
+  decodeHtmlEntity: (htmlData) => {
+    // htmlData string, not null, not undefined
+    // works with empty string
+    // should throw error if (not string) or null or undefined
+    return String(htmlData).replace(/(&lt;|&gt;|&apos;|&quot;|&amp;)/g, substring => {
       switch (substring) {
       case '&lt;': return '<'
       case '&gt;': return '>'
-      case '&amp;': return '&'
-      case '&apos;': return '´'
+      case '&apos;': return '\''
       case '&quot;': return '"'
+      case '&amp;': return '&'
       }
     })
-    
-    return decoded
   },
       
   /** Validates whether property is safely accessible and "truthy". Empty string allowed.

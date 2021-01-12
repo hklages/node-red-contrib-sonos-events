@@ -29,11 +29,10 @@ module.exports = function (RED) {
     node.status({})
 
     const subscriptions = {
-      topology: config.topology,
-      alarmList: config.alarmList,
-      contentMySonos: config.contentMySonos,
-      contentMusicLibrary: config.contentMusicLibrary,
-      contentSonosPlaylists: config.contentSonosPlaylists
+      zoneGroupTopologyRaw: config.zoneGroupTopologyRaw,
+      allGroups: config.allGroups,
+      alarmClockRaw: config.alarmClockRaw,
+      contentDirectoryRaw: config.contentDirectoryRaw
     }
 
     // create new player from input such as 192.168.178.35
@@ -77,17 +76,17 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   const msgMaster = [null, null, null, null, null, null, null, null]
 
   // bind events
-  if (subscriptions.topology) {
+  if (subscriptions.zoneGroupTopologyRaw || subscriptions.allGroups) {
     await player.ZoneGroupTopologyService.Events.on('serviceEvent', sendMsgZoneGroup)
     debug('subscribed to ZoneGroupTopologyService')
   }
-  if (subscriptions.alarmList) {
+
+  if (subscriptions.alarmClockRaw) {
     await player.AlarmClockService.Events.on('serviceEvent', sendMsgAlarmClock)
     debug('subscribed to AlarmClockService')
   }
-  if (subscriptions.contentMySonos
-    || subscriptions.contentMusicLibrary
-    || subscriptions.contentSonosPlaylists) {
+
+  if (subscriptions.contentDirectoryRaw) {
     await player.ContentDirectoryService.Events.on('serviceEvent', sendMsgContentDirectory)
     debug('subscribed to ContentDirectoryService')
   }
@@ -95,14 +94,34 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   return true
 
   // .............. sendMsg functions ...............
+  // only output to requested output lines, prepare data
+  // uses global node  
   async function sendMsgZoneGroup (raw) {
+    debug('new ZoneGroupTopologyService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 0
     try {
-      debug('new ZoneGroupTopologyService event >>', JSON.stringify(raw))
-      const payload = await improvedZoneData(raw, player.host)
-      const topic =  `household/${player.host}/zoneGroupTopology/topology`
-      const msg = msgMaster.slice()
-      msg[0] = { payload, raw, topic }        
-      node.send(msg)
+      const topicPrefix =  `household/${player.host}/zoneGroupTopology/`
+      const improved = await improvedZoneData(raw)
+      
+      if (subscriptions.zoneGroupTopologyRaw) {
+        const msg = msgMaster.slice()
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }        
+        node.send(msg)
+      }
+      msgIndex++ 
+
+      if (subscriptions.allGroups && improvedZoneData.allGroups !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.allGroups
+        topic = topicPrefix + 'allGroups'
+        msg[msgIndex] = { payload, raw, topic }        
+        node.send(msg)
+      }
+      msgIndex++ 
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
@@ -112,14 +131,22 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   }
 
   async function sendMsgAlarmClock (raw) {
+    debug('new AlarmClockService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 4
     try {
-      debug('new AlarmClockService event >>', JSON.stringify(raw))
-      const alarms = await player.AlarmClockService.ListAndParseAlarms()
-      const payload = raw
-      const topic = `household/${player.host}/alarmClock/alarmList`
-      const msg = msgMaster.slice()
-      msg[1] = { payload, alarms, topic }
-      node.send(msg)  
+      const topicPrefix = `household/${player.host}}/alarmClock/`
+      
+      if (subscriptions.avTransportRaw) {
+        payload = raw
+        topic = topicPrefix + 'raw'
+        const msg = msgMaster.slice()
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
@@ -129,33 +156,22 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   }
 
   async function sendMsgContentDirectory (raw) {
-    let payload
-    let topic
+    debug('new ContentDirectoryService event >>')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 6
     try {
-      debug('new ContentDirectoryService event >>', JSON.stringify(raw))
       const topicPrefix = `household/${player.host}/ContentDirectory/`
-      if (raw.FavoritesUpdateID && subscriptions.contentMySonos) {
+      
+      if (subscriptions.contentDirectoryRaw) {
         const msg = msgMaster.slice()
-        // TODO check existence
-        payload = raw.FavoritesUpdateID
-        topic = topicPrefix + 'contentMySonos'
-        msg[2] = { payload, raw, topic }
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }
         node.send(msg)
       }
-      if (raw.ShareListUpdateID && subscriptions.contentMusicLibrary) {
-        const msg = msgMaster.slice()
-        payload = raw.ShareListUpdateID
-        topic = topicPrefix + 'contentMusicLibrary'
-        msg[3] = { payload, raw, topic }
-        node.send(msg)
-      }
-      if (raw.SavedQueuesUpdateID && subscriptions.contentSonosPlaylists) {
-        const msg = msgMaster.slice()
-        payload = raw.SavedQueuesUpdateID
-        topic = topicPrefix + 'contentSonosPlaylists'
-        msg[4] = { payload, raw, topic }
-        node.send(msg)
-      }
+      msgIndex++
+
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })

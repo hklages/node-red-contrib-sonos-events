@@ -12,30 +12,42 @@
         value: '',
         required: true
       },
+      renderingControlRaw: { 
+        value: false
+      },
       volume: { 
         value: true
       },
       mutestate: { 
+        value: true
+      },
+      groupManagementRaw: { 
         value: false
       },
       localGroupUuid: { 
         value: false
       },
-      lineInConnected: { 
+      audioInServiceRaw: { 
+        value: false
+      },
+      playing: { 
+        value: false
+      },
+      devicePropertiesRaw: { 
         value: false
       },
       micEnabled: { 
         value: false
       },
       outputs: { 
-        value: 8
+        value: 14
       }
     },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#FF8040',
     paletteLabel: 'player events',
-    outputLabels: ['volume', 'mutestate','localGroupUuid', 'lineInConnected', 'micEnabled', 'future use','future use','future use' ],
+    outputLabels: ['renderingControlRaw', 'volume', 'mutestate','future use', 'future use', 'groupManagementRaw', 'localGroupUuid', 'future use', 'audioInServiceRaw', 'playing', 'devicePropertiesRaw', 'micEnabled', 'future use','future use', 'future use' ],
     label: function() {
       return 'player events';
     },
@@ -115,15 +127,23 @@
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
+        RenderingControlService
+        <label class="event-checkbox"><input type="checkbox" id="node-input-renderingControlRaw"> All events, raw data</label>  
         <label class="event-checkbox"><input type="checkbox" id="node-input-volume"> Volume</label>  
         <label class="event-checkbox"><input type="checkbox" id="node-input-mutestate"> Mutestate </label>
+        <br>GroupManagementService
+        <label class="event-checkbox"><input type="checkbox" id="node-input-groupManagementRaw"> All events, raw data</label>
         <label class="event-checkbox"><input type="checkbox" id="node-input-localGroupUuid"> Group uuid</label>
-        <label class="event-checkbox"><input type="checkbox" id="node-input-lineInConnected"> Line In is connected</label>
+        <br>AudioInService
+        <label class="event-checkbox"><input type="checkbox" id="node-input-audioInServiceRaw"> All events, raw data</label>
+        <label class="event-checkbox"><input type="checkbox" id="node-input-playing"> Playing</label>
+        <br>DevicePropertiesService
+        <label class="event-checkbox"><input type="checkbox" id="node-input-devicePropertiesRaw"> All events, raw data</label>
         <label class="event-checkbox"><input type="checkbox" id="node-input-micEnabled"> Microphone state</label>
       </div>
     </div>
     <div class="form-tips" style="width: auto;">
-      Events: Each item is send via a single message (no packages) with topic player\{playerHostname}\{service}\{item}
+      Events: Each item is send via a single message with topic (camel case) player\{playerHostname}\{service}\{item}.
      </div><br>
     <br>
 

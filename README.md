@@ -6,7 +6,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/hklages/node-red-contrib-sonos-plus/master/LICENSE)
 [![Donation](https://img.shields.io/badge/donation-cappuccino-orange)](https://www.buymeacoffee.com/hklages)
 
------ BETA STATUS ------
+----- CAUTION: 2020-12 & 2021-01 A LOT OF FLOW BREAKING CHANGES WILL BE IMPLEMENTED - NO SUPPORT DURING THIS TIME -------- 
 
 A set of [Node-RED](https://nodered.org/) nodes to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 
@@ -29,7 +29,8 @@ Either open a github issue (preferred method) or send an email to nrcsplus@gmail
 
 Install directly from your Node-RED's setting palette.
 
-The status of the event listener ist at http://<hostname>:<port>/status
+The status of the event listener ist at `http://<hostname>:<port>/status`
+Port default is 6329.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 

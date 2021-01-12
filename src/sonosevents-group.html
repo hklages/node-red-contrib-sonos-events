@@ -121,7 +121,7 @@
     <div class="form-row">
       <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
       <div style="width: auto; display: inline-block; vertical-align: text-top;">
-        AVTransportService  
+        AVTransportService
         <label class="event-checkbox"><input type="checkbox" id="node-input-avTransportRaw" > All events, raw data </label>
         <label class="event-checkbox"><input type="checkbox" id="node-input-basics" > AVTransport </label>
         <label class="event-checkbox"><input type="checkbox" id="node-input-content" > Content </label>
@@ -134,7 +134,7 @@
     </div>
 
     <div class="form-tips" style="width: auto;">
-      Events: Each item is send via a single message with topic group\{playerHostname}\{service}\{item}. The msg may comprise several properties.
+      Events: Each item is send via a single message with topic (camel case) player\{playerHostname}\{service}\{item}.
      </div><br>
 
     <!-- Amount of outputs -->

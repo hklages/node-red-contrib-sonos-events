@@ -8,7 +8,11 @@ All notable changes to this project are documented in this file.
 
 #### Changed
 
-- group now with new outputs
+- group now with new events/outputs
+
+- player with new events/ outputs 
+
+- household with new events/outputs
 
 ### [0.0.17/18/19] 2021-01-10
 

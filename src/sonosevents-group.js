@@ -170,7 +170,7 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, coordinator)
       if (subscriptions.groupRenderingControlRaw) {
         const msg = msgMaster.slice()
         payload = raw
-        topic = topicPrefix + 'Raw'
+        topic = topicPrefix + 'raw'
         msg[msgIndex] = { payload, topic }
         node.send(msg)
       }

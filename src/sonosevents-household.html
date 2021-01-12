@@ -12,19 +12,16 @@
         value: '',
         required: true
       },
-      topology: { 
+      zoneGroupTopologyRaw: { 
+        value: false
+      },
+      allGroups: { 
         value: true
       },
-      alarmList: { 
+      alarmClockRaw: { 
         value: false
       },
-      contentMySonos: { 
-        value: false
-      },
-      contentMusicLibrary: { 
-        value: false
-      },
-      contentSonosPlaylists: { 
+      contentDirectoryRaw: { 
         value: false
       },
       outputs: { 
@@ -35,7 +32,7 @@
     icon: 'sonos.png', // saved in icons/myicon.png
     color: '#E56717',
     paletteLabel: 'household events',
-    outputLabels: ['topology','alarm list', 'contentMySonos', 'contentMusicLibrary', 'contentSonosPlaylists', 'future use', 'future use', 'future use'],
+    outputLabels: ['zonGroupTopologyRaw', 'allGroups', 'future use', 'future use', 'alarmClockRaw', 'future use', 'contentDirectoryRaw', 'future use' ],
     label: function() {
       return 'household events'
     },
@@ -117,16 +114,18 @@
       <div class="form-row">
         <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
         <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          <label class="event-checkbox"><input type="checkbox" id="node-input-topology"> Group zone </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-alarmList" > Alarm list</label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-contentMySonos"> My Sonos</label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-contentMusicLibrary"> Music Library</label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-contentSonosPlaylists"> SONOS-Playlists</label>
+          ZoneGroupTopologyService
+          <label class="event-checkbox"><input type="checkbox" id="node-input-zoneGroupTopologyRaw"> All events, raw data </label>
+          <label class="event-checkbox"><input type="checkbox" id="node-input-allGroups"> All Groups </label>
+          AlarmClockService
+          <label class="event-checkbox"><input type="checkbox" id="node-input-alarmClockRaw" > All events, raw data</label>
+          ContentDirectoryService
+          <label class="event-checkbox"><input type="checkbox" id="node-input-contentDirectoryRaw"> All events, raw data</label>
       </div>
     </div>
 
     <div class="form-tips" style="width: auto;">
-      Events: Each item is send via a single message (no packages) with topic household\{playerHostname}\{service}\{item}
+      Events: Each item is send via a single message with topic (camel case) player\{playerHostname}\{service}\{item}.
      </div><br>
 
     <!-- Amount of outputs -->

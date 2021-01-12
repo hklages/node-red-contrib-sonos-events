@@ -12,7 +12,7 @@
 
 const PACKAGE_PREFIX = 'nrcse: '
 
-const { isTruthyAndNotEmptyString, isValidProperty, decodeHtml, isValidPropertyNotEmptyString
+const { isTruthyAndNotEmptyString, isValidProperty, decodeHtmlEntity, isValidPropertyNotEmptyString
 } = require('./Helper.js')
 
 const parser = require('fast-xml-parser')
@@ -39,7 +39,7 @@ module.exports = {
     if (!isValidPropertyNotEmptyString(householdPlayers, ['ZoneGroupState'])) {
       throw new Error(`${PACKAGE_PREFIX} property ZoneGroupState is missing`)
     }
-    const decoded = decodeHtml(householdPlayers.ZoneGroupState)
+    const decoded = decodeHtmlEntity(householdPlayers.ZoneGroupState)
     const attributeNamePrefix = '_'
     const options = { ignoreAttributes: false, attributeNamePrefix }
     const groups = await parser.parse(decoded, options) 

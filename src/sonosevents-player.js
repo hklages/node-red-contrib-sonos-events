@@ -10,8 +10,10 @@
 
 'use strict'
 
-const { SonosDevice, SonosEvents } = require('@svrooij/sonos/lib')
-const { isValidProperty } = require('./Helper')
+const { SonosDevice } = require('@svrooij/sonos/lib')
+const {
+  improvedGroupManagementService, improvedAudiIn,
+  improvedDeviceProperties, improvedRenderingControl } = require('./Helper')
 
 const debug = require('debug')('nrcse:player')
 
@@ -31,10 +33,14 @@ module.exports = function (RED) {
 
     // get data from dialog
     const subscriptions = {
+      renderingControlRaw: config.renderingControlRaw,
       mutestate: config.mutestate,
       volume: config.volume,
+      groupManagementRaw: config.groupManagementRaw,
       localGroupUuid: config.localGroupUuid,
-      lineInConnected: config.lineInConnected,
+      audioInServiceRaw: config.audioInServiceRaw,
+      playing: config.playing,
+      devicePropertiesRaw: config.devicePropertiesRaw,
       micEnabled: config.micEnabled
     }
 
@@ -79,28 +85,23 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   const msgMaster = [null, null, null, null, null, null, null, null]
 
   // bind events
-  if (subscriptions.volume) {
-    await player.Events.on(SonosEvents.Volume, sendMsgVolume)
-    debug('subscribed to volume')
+  if (subscriptions.renderingControlRaw || subscriptions.volume || subscriptions.mutestate) {
+    await player.RenderingControlService.Events.on('serviceEvent', sendMsgRenderingControl)
+    debug('subscribed to RenderingControlService')
   }
   
-  if (subscriptions.mutestate) {
-    await player.Events.on(SonosEvents.Mute, sendMsgMutestate)
-    debug('subscribed to mutestate')
-  }
-
-  if (subscriptions.localGroupUuid) {
+  if (subscriptions.localGroupUuid || subscriptions.groupManagementRaw) {
     await player.GroupManagementService.Events.on('serviceEvent', sendMsgGroupManagement)
     debug('subscribed to GroupManagementService')
   }
 
   // TODO check whether device supports it!
-  if (subscriptions.lineInConnected) {
+  if (subscriptions.audioInServiceRaw || subscriptions.playing) {
     await player.AudioInService.Events.on('serviceEvent', sendMsgAudioInService)
     debug('subscribed to AudioInService')
   }
   // TODO check whether device supports it!
-  if (subscriptions.micEnabled) {
+  if (subscriptions.devicePropertiesRaw || subscriptions.micEnabled) {
     await player.DevicePropertiesService.Events.on('serviceEvent', sendMsgDeviceProperties)
     debug('subscribed to DevicePropertiesService')
   }
@@ -108,14 +109,44 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   return true
 
   // .............. sendMsg functions ...............
-  async function sendMsgVolume (raw) {
+  // only output to requested output lines, prepare data
+  // uses global node
+  async function sendMsgRenderingControl (raw) {
+    debug('new RenderingControl event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 0
     try {
-      debug('new volume event')
-      const payload = String(raw)
-      const topic = `player/${player.host}/renderingControl/volume`
-      const msg = msgMaster.slice()
-      msg[0] = { payload, raw, topic }
-      node.send(msg)
+      const topicPrefix = `player/${player.host}/renderingControl/`
+      const improved = await improvedRenderingControl(raw)
+      
+      if (subscriptions.renderingControlRaw) {
+        const msg = msgMaster.slice()
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+
+      if (subscriptions.volume && improved.volume !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.volume
+        topic = topicPrefix + 'volume'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+
+      if (subscriptions.mutestate && improved.mutestate !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.mutestate
+        topic = topicPrefix + 'mutestate'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
@@ -123,31 +154,34 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
       node.debug(`error processing volume event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
     }
   }
-  
-  async function sendMsgMutestate (raw) {
-    try {
-      debug('new mute state event')
-      const payload = (raw ? 'on' : 'off')
-      const topic =  `player/${player.host}/renderingControl/mutestate`
-      const msg = msgMaster.slice()
-      msg[1] = { payload, raw, topic }
-      node.send(msg)
-    } catch (error) {
-      errorCount++
-      node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
-      // eslint-disable-next-line max-len
-      node.debug(`error processing mute state event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
-    }
-  }
 
   async function sendMsgGroupManagement (raw) {
+    debug('new GroupManagementService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 5
     try { 
-      debug('new GroupManagementService event')
-      const payload = raw.LocalGroupUUID
-      const topic = `player/${player.host}/groupManagement/localGroupUuid`
-      const msg = msgMaster.slice()
-      msg[2] = { payload, raw, topic }        
-      node.send(msg)
+      const topicPrefix = `group/${player.host}/groupManagementService/`
+      const improved = await improvedGroupManagementService(raw) 
+
+      if (subscriptions.groupManagementRaw) {
+        const msg = msgMaster.slice()
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+
+      if (subscriptions.localGroupUuid && improved.localGroupUuid !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.localGroupUuid
+        topic = topicPrefix + 'localGroupUuid'
+        msg[msgIndex] = { payload, raw, topic }
+        node.send(msg)
+      }
+      msgIndex++
+      
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
@@ -157,16 +191,32 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   }
     
   async function sendMsgAudioInService (raw) {
+    debug('new AudioInService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 8
     try {
-      debug('new AudioInService event')
-      let payload = 'not available'
-      if (isValidProperty(raw, ['LineInConnected'])) {
-        payload = (raw.LineInConnected ? 'yes' : 'no')
+      const topicPrefix = `group/${player.host}/audioIn/`
+      const improved = await improvedAudiIn(raw) 
+
+      if (subscriptions.audioInServiceRaw) {
+        const msg = msgMaster.slice()
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
       }
-      const topic =  `player/${player.host}/audioInService/lineInConnected`
-      const msg = msgMaster.slice()
-      msg[3] = { payload, raw, topic }        
-      node.send(msg)
+      msgIndex++
+
+      if (subscriptions.playing && improved.playing !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.playing
+        topic = topicPrefix + 'playing'
+        msg[msgIndex] = { payload, raw, topic }
+        node.send(msg)
+      }
+      msgIndex++
+      
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
@@ -176,16 +226,32 @@ async function asyncSubscribeToMultipleEvents (node, subscriptions, player) {
   }
   
   async function sendMsgDeviceProperties (raw) {
+    debug('new DevicePropertiesService event')
+    let payload = {}
+    let topic = ''
+    let msgIndex = 10
     try {
-      debug('new DevicePropertiesService event')
-      let payload = 'not available'
-      if (isValidProperty(raw, ['MicEnabled'])) {
-        payload = (raw.MicEnabled === 1 ? 'on' : 'off')
+      const topicPrefix = `group/${player.host}/deviceProperties/`
+      const improved = await improvedDeviceProperties(raw) 
+      
+      if (subscriptions.devicePropertiesRaw) {
+        const msg = msgMaster.slice()
+        payload = raw
+        topic = topicPrefix + 'raw'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
       }
-      const topic =  `player/${player.host}/deviceProperties/micState`
-      const msg = msgMaster.slice()
-      msg[4] = { payload, raw, topic }        
-      node.send(msg)
+      msgIndex++
+
+      if (subscriptions.micEnabled && improved.micEnabled !== null) {
+        const msg = msgMaster.slice()
+        payload = improved.micEnabled
+        topic = topicPrefix + 'micEnabled'
+        msg[msgIndex] = { payload, topic }
+        node.send(msg)
+      }
+      msgIndex++
+     
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
