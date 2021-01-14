@@ -14,11 +14,13 @@ const { getGroupsAllFast } = require('./Sonos-Commands.js')
 
 const { SonosDeviceDiscovery, SonosDevice } = require('@svrooij/sonos/lib')
 
+const { networkInterfaces } = require('os')
+
 const debug = require('debug')('nrcse:Discovery')
 
 module.exports = {
 
-  discoverAllPlayer: async () => {
+  discoverPlayers: async () => {
     // discover the first one an get all others because we need also the player names
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
     // Sonos player knew best the topology
@@ -40,7 +42,7 @@ module.exports = {
     return reducedList
   },
 
-  discoverAllCoordinators: async function () {
+  discoverCoordinators: async function () {
     // discover the first one an get all coordinators
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
     // Sonos player knew best the topology
@@ -60,5 +62,62 @@ module.exports = {
       }
     })
     return reducedList
+  },
+
+  getIp: async (idx) => {
+
+    const addresses = []
+    const interfaces = networkInterfaces()
+    let name
+    let ifaces
+    let iface
+  
+    for (name in interfaces) {
+      // eslint-disable-next-line no-prototype-builtins
+      if(interfaces.hasOwnProperty(name)) {
+        ifaces = interfaces[name]
+        if(!/(loopback|vmware|internal)/gi.test(name)) {
+          for (let i = 0; i < ifaces.length; i++) {
+            iface = ifaces[i]
+            if (iface.family === 'IPv4' &&  !iface.internal && iface.address !== '127.0.0.1') {
+              addresses.push(iface.address)
+            }
+          }
+        }
+      }
+    }
+  
+    // If an index is passed only return it.
+    if(idx >= 0)
+      return addresses[idx]
+    return addresses
+  },
+
+  getIpStephan: async () => {
+    const ifaces = networkInterfaces()
+
+    let interfaces = Object.keys(ifaces).filter((k) => k !== 'lo0')
+    if (process.env.SONOS_LISTENER_INTERFACE) {
+      interfaces = interfaces.filter((i) => i === process.env.SONOS_LISTENER_INTERFACE)
+    } else {
+      // Remove unwanted interfaces on windows
+      interfaces = interfaces.filter((i) => i.indexOf('vEthernet') === -1)
+    }
+    if (interfaces === undefined || interfaces.length === 0) {
+      throw new Error('No network interfaces found')
+    }
+
+    let address
+
+    interfaces.forEach((inf) => {
+      const currentInterface = ifaces[inf]
+      if (currentInterface === undefined) return
+      const info = currentInterface.find((i) => i.family === 'IPv4' && i.internal === false)
+      if (info !== undefined) {
+        address = info.address
+      }
+    })
+    if (address !== undefined) return address
+    throw new Error('No non-internal ipv4 addresses found')
   }
 } 

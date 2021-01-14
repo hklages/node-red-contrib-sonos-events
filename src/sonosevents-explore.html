@@ -1,7 +1,7 @@
-<!-- Sonos Events Household Node -->
+<!-- Sonos Events Explore Node -->
 <!-- Registering Node (JavaScript) -->
 <script type="text/javascript">
-  RED.nodes.registerType('sonosevents-household', {
+  RED.nodes.registerType('sonosevents-explore', {
     category: 'sonosevents',
     defaults: {
       confignode: {
@@ -12,31 +12,26 @@
         value: '',
         required: true
       },
-      zoneGroupTopologyRaw: { 
-        value: false
-      },
-      allGroups: { 
-        value: true
-      },
-      alarmClockRaw: { 
-        value: false
-      },
-      contentDirectoryRaw: { 
-        value: false
+      events: {
+        value:[{eventName:"avtransport\raw"}]
       },
       outputs: { 
-        value: 8
+        value: 2
       }
     },
+    outputLabels: function(index) {
+      return String(index)
+      },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
-    color: '#E56717',
-    paletteLabel: 'household events',
-    outputLabels: ['zonGroupTopologyRaw', 'allGroups', 'future use', 'future use', 'alarmClockRaw', 'future use', 'contentDirectoryRaw', 'future use' ],
+    color: '#F87217',
+    paletteLabel: 'explore events',
     label: function() {
-      return 'household events'
+      return 'explore events'
     },
     oneditprepare: function() {      
+      
+      // enter player name or do a discovery
       try {
         $('#node-input-playerHostname').autocomplete('destroy')
       } catch (err) {}
@@ -64,11 +59,56 @@
             .autocomplete('search', '')
         })
       })
-    
+  
+      // event container
+      const eventNameList = [
+        {name:"avtransport-raw"},
+        {name:"avtransport-basics"},
+        {name:"avtransport-playing"},
+        {name:"avtransport-content"}
+      ]
+
+      // -- set the basics
+      $("#node-input-events-container").css('min-height','250px').css('min-width','250px').editableList({
+        header: $("<div>").append($.parseHTML("<div>Eventname - order defines outputs</div>")),
+        sortable: true,
+        removable: true, 
+        addButton: "add",
+        addItem: function(container, index, data) {
+          if (data.eventName) {
+            val = data.eventName
+          } else {
+            val = 'raw' // default event
+          }
+          let row = $('<div/>').appendTo(container);
+          let selectField = $('<select/>').appendTo(row);
+          for (let index = 0; index < eventNameList.length; index++) {
+            selectField.append(`<option value="${eventNameList[index].name}">${eventNameList[index].name}</option>`);
+          }
+        }
+      })
+
+      // -- populate at beginning
+      for (let i = 0; i < this.events.length; i++) {
+        let event = this.events[i];
+        $("#node-input-events-container").editableList('addItem',event)
+      }
+
     }, 
+
     oneditsave: function() {
-      // currently nothing
+      // save event container
+     
+      let node = this
+      node.outputs = $("#node-input-events-container").editableList('length');
+      let newEvents = $("#node-input-events-container").editableList('items')
+      node.events = []
+      newEvents.each((item) =>  {
+             console.log('item >>'+ JSON.stringify(item))
+            // events.push(item)
+      })
     },
+
     oneditcancel: function() {
      // currently nothing
     }
@@ -76,7 +116,7 @@
 </script>
 
 <!-- Setting design and inputs for node panel (HTML)-->
-<script type="text/html" data-template-name="sonosevents-household">
+<script type="text/html" data-template-name="sonosevents-explore">
   <style>
     label.event-checkbox {
         display: block !important;
@@ -88,7 +128,6 @@
     }
   </style>
   
-  
   <div id="main-props">
     <!-- Config node -->
     <div class="form-row">
@@ -99,55 +138,42 @@
       Config node:  There should only be one config node per household to define the internal web server. 
      </div><br>
 
-    <!-- SONOS player hostname such such 192.168.178.35-->
+    <!-- SONOS player hostname such such 192.168.178.37-->
     <div class="form-row">
       <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player </label>
       <input type="text" id="node-input-playerHostname"  placeholder="192.168.x.x" style="width: 60%;">
       <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
     </div>
     <div class="form-tips">
-      Player:  Use the search button to discover SONOS player in your local network and select any player.
+      Player:  Use the search button to discover SONOS player in your local network and select a COORDINATOR.
     </div><br>
 
     <!-- Events-->
-    <div class="form-row">
-      <div class="form-row">
-        <label for="node-input-eventsEnabled" style="width: 25%;"><i class="fa fa-rss" aria-hidden="true"></i> Events</label>
-        <div style="width: auto; display: inline-block; vertical-align: text-top;">
-          ZoneGroupTopologyService
-          <label class="event-checkbox"><input type="checkbox" id="node-input-zoneGroupTopologyRaw"> All events, raw data </label>
-          <label class="event-checkbox"><input type="checkbox" id="node-input-allGroups"> All Groups </label>
-          AlarmClockService
-          <label class="event-checkbox"><input type="checkbox" id="node-input-alarmClockRaw" > All events, raw data</label>
-          ContentDirectoryService
-          <label class="event-checkbox"><input type="checkbox" id="node-input-contentDirectoryRaw"> All events, raw data</label>
-      </div>
-    </div>
-
-    <div class="form-tips" style="width: auto;">
-      Events: Each item is send via a single message with topic (camel case) player\{playerHostname}\{service}\{item}.
-     </div><br>
+    <div class="form-row node-input-events-container-row">
+      <ol id="node-input-events-container"></ol>
+   </div>
 
     <!-- Amount of outputs -->
     <div class="form-row">
-      <label for="node-input-outputs" style="width: 25%;"><i class="fa fa-sign-out"></i> Outputs</label>
-      <input type="text" id="node-input-outputs" placeholder="3" disabled/>
+      <input type="hidden" id="node-input-outputs" />
     </div>
 
     <!-- Node name -->
     <div class="form-row">
       <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="This node name" />
-    </div><br>
+    </div>
+    <br>
     
     <!-- Dialog help -->
     Further information: See the help text.
   </div>  
+  
 </script>
 
-<<!-- Help text (HTML) -->
-<script type="text/html" data-help-name="sonosevents-household">
-  <p>Subscribe to household events. The player can be any player.<p>
+<!-- Help text (HTML) -->
+<script type="text/html" data-help-name="sonosevents-explore">
+  
     
   <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more about Events</a>
     

@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.1.0] 2021-01-14
+
+#### Changed
+
+- new group to explore new interface
+
+- updated eslint dependencies
+
+- test getIp via http, renaming to discovery
+
 ### [0.0.20/21] 2021-01-12
 
 #### Changed

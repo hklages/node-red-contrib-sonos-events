@@ -10,7 +10,7 @@
 
 'use strict'
 
-const { discoverAllPlayer, discoverAllCoordinators } = require('./Discovery.js')
+const { discoverPlayers, discoverCoordinators, getIp, getIpStephan } = require('./Discovery.js')
 
 const debug = require('debug')('nrcse:config')
 
@@ -40,8 +40,8 @@ module.exports = function (RED) {
 
   RED.httpNode.get('/nrcse/*', function (req, response) {
     switch (req.params[0]) {
-    case 'searchDevices':
-      discoverAllPlayer()
+    case 'discoverPlayers':
+      discoverPlayers()
         .then((playerList) => {
           response.json(playerList)
         })
@@ -50,16 +50,41 @@ module.exports = function (RED) {
         })
       break
       
-    case 'searchCoordinators':
-      discoverAllCoordinators()
+    case 'discoverCoordinators':
+      discoverCoordinators()
         .then((playerList) => {
           response.json(playerList)
         })
         .catch((error) => {
           debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
         })
-        
       break
+    
+    case 'getIp':
+      getIp()
+        .then((ipList) => {
+          console.log(JSON.stringify(ipList))
+          response.json(ipList)
+        })
+        .catch((error) => {
+          debug('error getiI >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
+            
+      break
+      
+    case 'getIpStephan':
+      getIpStephan()
+        .then((ipList) => {
+          console.log(JSON.stringify(ipList))
+          response.json(ipList)
+        })
+        .catch((error) => {
+          // eslint-disable-next-line max-len
+          debug('error stephan getIp >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
+                
+      break
+       
     }   
   })
 
