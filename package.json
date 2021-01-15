@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-sonos-events",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A set of Node-RED nodes to handle SONOS events in a local network.",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   ],
   "node-red": {
     "nodes": {
-      "sonosevents-explore": "src/sonosevents-explore.js",
+      "sonosevents-selection": "src/sonosevents-selection.js",
       "sonosevents-config": "src/sonosevents-config.js",
       "sonosevents-player": "src/sonosevents-player.js",
       "sonosevents-group": "src/sonosevents-group.js",

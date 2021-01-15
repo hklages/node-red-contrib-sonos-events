@@ -6,7 +6,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/hklages/node-red-contrib-sonos-plus/master/LICENSE)
 [![Donation](https://img.shields.io/badge/donation-cappuccino-orange)](https://www.buymeacoffee.com/hklages)
 
------ CAUTION: 2020-12 & 2021-01 A LOT OF FLOW BREAKING CHANGES WILL BE IMPLEMENTED - NO SUPPORT DURING THIS TIME -------- 
+----- CAUTION: 2020-12 & 2021-01 A LOT OF FLOW BREAKING CHANGES WILL BE IMPLEMENTED - NO SUPPORT DURING THIS TIME --------
 
 A set of [Node-RED](https://nodered.org/) nodes to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 

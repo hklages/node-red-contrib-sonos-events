@@ -61,7 +61,7 @@ module.exports = function (RED) {
       break
     
     case 'getIp':
-      getIp()
+      getIp(0)
         .then((ipList) => {
           console.log(JSON.stringify(ipList))
           response.json(ipList)

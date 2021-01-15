@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.2.0] 2021-01-15
+
+#### Changed
+
+- new node "selection"- on node of everything
+
+- test getIp via http
+
 ### [0.1.0] 2021-01-14
 
 #### Changed
