@@ -9,14 +9,14 @@
         required: true
       },
       events: {
-        value:[ {name:'avtransport.playing'}, {name:'avtransport.content'} ]
+        value:[ {fullName:'AVTransportService.playbackstate'}, {fullName:'AVTransportService.content'} ]
       },
       outputs: { 
         value: 2
       }
     },
     outputLabels: function(i) {
-      return this.events[i].name
+      return this.events[i].fullName
       },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
@@ -61,50 +61,56 @@
 
       // events container: add additional items
       const availableEvents = [
-        {name:'AudioInService.raw', description: 'AudioIn-raw'},  
-        {name:'AudioInService.playing', description: 'AudioIn-playing'},  
-        {name:'AlarmClockService.raw', description: 'AlarmClock-raw'},
-        {name:'AVTransportService.content', description: 'AVTransport-content: track, album, title ...'},  // default
-        {name:'AVTransportService.raw', description: 'AVTransport-raw'},
-        {name:'AVTransportService.basics', description: 'AVTransport-basics'},
-        {name:'AVTransportService.playbackstate', description: 'AVTransport-playbackstate'},
-        {name:'ConnectionManagerService.raw', description: 'ConnectionManager-raw'},
-        {name:'ContentDirectoryService.raw', description: 'ContentDirectory-raw'},
-        {name:'DevicePropertiesService.raw', description: 'DevicePropertiesService-raw'},
-        {name:'GroupManagementService.raw', description: 'GroupManagement-raw'},
-        {name:'GroupRenderingControlService.raw', description: 'GroupRenderingControl-raw'},
-        {name:'GroupRenderingControlService.groupVolume', description: 'GroupRenderingControl-groupVolume'},
-        {name:'GroupRenderingControlService.groupMutestate', description: 'GroupRenderingControl-groupMutestate'},
-        {name:'MusicServicesService.raw', description: 'MusicServices-raw'},
-        {name:'QueueService.raw', description: 'QueueService-raw'},
-        {name:'RenderingControlService.raw', description: 'RenderingControl-raw'},
-        {name:'RenderingControlService.volume', description: 'RenderingControl-volume'},
-        {name:'SystemPropertiesService.raw', description: 'SystemProperties-raw'},
-        {name:'VirtualLineInService.raw', description: 'VirtualLineIn-raw'},
-        {name:'ZoneGroupTopologyService.raw', description: 'ZoneGroupTopology-raw'}
+        {fullName:'AudioInService.raw', description: 'AudioIn raw'},  
+        {fullName:'AudioInService.playing', description: 'AudioIn playing'},  
+        {fullName:'AlarmClockService.raw', description: 'AlarmClock raw'},
+        {fullName:'AVTransportService.raw', description: 'AVTransport raw'},
+        {fullName:'AVTransportService.content', description: 'AVTransport content: track, album, title ...'},  // default
+        {fullName:'AVTransportService.basics', description: 'AVTransport basics'},
+        {fullName:'AVTransportService.playbackstate', description: 'AVTransport playbackstate'},
+        {fullName:'ConnectionManagerService.raw', description: 'ConnectionManager raw'},
+        {fullName:'ContentDirectoryService.raw', description: 'ContentDirectory raw'},
+        {fullName:'DevicePropertiesService.raw', description: 'DevicePropertiesService raw'},
+        {fullName:'DevicePropertiesService.micEnabled', description: 'DevicePropertiesService micEnabled'},
+        {fullName:'GroupManagementService.raw', description: 'GroupManagement raw'},
+        {fullName:'GroupManagementService.localGroupUuid', description: 'GroupManagement localGroupUuid'},
+        {fullName:'GroupRenderingControlService.raw', description: 'GroupRenderingControl raw'},
+        {fullName:'GroupRenderingControlService.groupVolume', description: 'GroupRenderingControl groupVolume'},
+        {fullName:'GroupRenderingControlService.groupMutestate', description: 'GroupRenderingControl groupMutestate'},
+        {fullName:'MusicServicesService.raw', description: 'MusicServices raw'},
+        {fullName:'QueueService.raw', description: 'QueueService raw'},
+        {fullName:'RenderingControlService.raw', description: 'RenderingControl raw'},
+        {fullName:'RenderingControlService.volume', description: 'RenderingControl volume'},
+        {fullName:'RenderingControlService.mutestate', description: 'RenderingControl mutestate'},
+        {fullName:'SystemPropertiesService.raw', description: 'SystemProperties raw'},
+        {fullName:'VirtualLineInService.raw', description: 'VirtualLineIn raw'},
+        {fullName:'ZoneGroupTopologyService.raw', description: 'ZoneGroupTopology raw'},
+        {fullName:'ZoneGroupTopologyService.allGroups', description: 'ZoneGroupTopology allGroups'}
       ]
 
       // -- set the basics
-      $('#node-input-events-container').css('min-height','250px').css('min-width','400px').editableList({
+      // index default
+      const defaultEventIndex = 4
+      $('#node-input-events-container').css('min-height','500px').css('min-width','400px').editableList({
         header: $('<div>').append($.parseHTML('<div>Event name - order defines outputs</div>')),
         sortable: true,
         removable: true, 
         addButton: 'add',
         addItem: function(container, index, data) {
-          if (data.name) {
-            val = data.name
+          if (data.fullName) {
+            val = data.fullName
           } else {
-            val = availableEvents[0] // default event for add button
+            val = availableEvents[defaultEventIndex].fullName
           }
           let row = $('<div/>').appendTo(container)
           let selectField = $('<select/>').appendTo(row)
           selectField.width(370)
 
           for (let index = 0; index < availableEvents.length; index++) {
-            selectField.append(`<option value="${availableEvents[index].name}">${availableEvents[index].description}</option>`)
+            selectField.append(`<option value="${availableEvents[index].fullName}">${availableEvents[index].description}</option>`)
           }
           // set select field value
-          const eventName = data.name || availableEvents[0].name
+          const eventName = data.fullName || availableEvents[defaultEventIndex].fullName 
           selectField.val(eventName).change()
         }
       })
@@ -122,9 +128,9 @@
       let modifiedEvents = $('#node-input-events-container').editableList('items')
       modifiedEvents.each(function(i) {
         let event = $(this)
-        let name = event.find('select').val()
-        node.events.push({ name })
-      });
+        let fullName = event.find('select').val()
+        node.events.push({ fullName })
+      })
 
       // update outputs
       $('#node-input-outputs').val(this.events.length)
@@ -158,7 +164,7 @@
       <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
     </div>
     <div class="form-tips">
-      Player:  Use the search button to discover SONOS player in your local network and select a COORDINATOR.
+      Player:  Use the search button to discover SONOS player in your local network and select a player.
     </div><br>
 
     <!-- Events-->

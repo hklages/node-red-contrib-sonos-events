@@ -14,12 +14,46 @@ const debug = require('debug')('nrcse:Helper')
 
 module.exports = {
 
-  improvedAudiIn: async function (raw) {
-    debug('method >>%s', 'improvedAudiIn')
+  // improve the incoming raw data and provide additional data
+  // TODO check one instead of many
+  improvedServiceData: async (serviceName, raw) => {
+    switch (serviceName) {
+    case 'AudioInService':
+      return module.exports.improvedAudioIn(raw)
+    case 'AlarmClockService':
+      return raw
+    case 'AVTransportService':
+      return module.exports.improvedAVTransport(raw)
+    case 'ConnectionManagerService':
+      return raw
+    case 'ContentDirectoryService':
+      return raw
+    case 'DevicePropertiesService':
+      return module.exports.improvedDeviceProperties(raw)
+    case 'GroupManagementService':
+      return module.exports.improvedGroupManagement(raw)
+    case 'GroupRenderingControlService':
+      return module.exports.improvedGroupRendering(raw)
+    case 'MusicServicesService':
+      return raw
+    case 'QueueService':
+      return raw
+    case 'RenderingControlService':
+      return module.exports.improvedRenderingControl(raw)
+    case 'SystemPropertiesService':
+      return raw
+    case 'VirtualLineInService':
+      return raw
+    case 'ZoneGroupTopologyService':
+      return module.exports.improvedZoneGroupTopology(raw)
+    }
+  },
+  
+  improvedAudioIn: async function (raw) {
+    debug('method >>%s', 'improvedAudioIn')
     
-    const improved = {}
+    const improved = { 'playing': null, raw }
 
-    improved.playing = null
     if (module.exports.isValidProperty(raw, ['Playing'])) {
       improved.playing = raw.Playing
     }
@@ -27,77 +61,67 @@ module.exports = {
     return improved
   },
 
-  improvedAvTransportData: async function (raw) {
-    debug('method >>%s', 'transformAvTransportData')
+  improvedAVTransport: async (raw) => {
+    debug('method >>%s', 'improvedAvTransportData')
 
-    const improved = {}
+    const improved = { 'basics': {}, 'content': {}, 'playbackstate': null, raw }
 
-    // ... bundle avTransportBasics
-    improved.basics = {}
-    let basicsTrue = false
+    // bundle basics
+    let atLeastOneBasics = false
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
       improved.basics.uri = raw.AVTransportURI
-      debug('avTransportURI >>%s', improved.basics.uri)
-      basicsTrue = true
       // eslint-disable-next-line max-len
       improved.basics.processingUnit = module.exports.getProcessingUnit(improved.basics.uri)
+      atLeastOneBasics = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTransportActions'])) {
       improved.basics.actions = raw.CurrentTransportActions // Stop,Next, ...
-      basicsTrue = true
+      atLeastOneBasics = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentValidPlayModes'])) {
       improved.basics.validPlayModes = raw.CurrentValidPlayModes 
-      basicsTrue = true
+      atLeastOneBasics = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
       improved.basics.playMode = raw.CurrentPlayMode // queue play mode
-      basicsTrue = true
+      atLeastOneBasics = true
     }
-    // destroy object if no items found
-    if (!basicsTrue) { 
-      improved.basics = null
-    }
+    // ... destroy object if no items found
+    if(!atLeastOneBasics) improved.basics = null
 
     // bundle content
     improved.content = {} 
-    let contentTrue = false
-    // Enqueued is the original command - has impact on AVTransport and Track, .. 
+    let atLeastOneContent = false
+    // ... Enqueued is the original command - has impact on AVTransport and Track, .. 
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
       improved.content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
-      debug('title >>%s', improved.content.enqueuedUpnp)
-      contentTrue = true
+      atLeastOneContent = true
     }
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
       improved.content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
-      debug('title >>%s', improved.content.enqueuedTitle)
-      contentTrue = true
+      atLeastOneContent = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
       improved.content.title = raw.CurrentTrackMetaData.Title
-      debug('title >>%s', improved.content.title)
-      contentTrue = true
+      atLeastOneContent = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
       improved.content.artist = raw.CurrentTrackMetaData.Artist
-      contentTrue = true
+      atLeastOneContent = true
     }
 
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
       improved.content.album = raw.CurrentTrackMetaData.Album
-      contentTrue = true
+      atLeastOneContent = true
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
       improved.content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
-      contentTrue = true
+      atLeastOneContent = true
     }  
-    // destroy object if no items found
-    if (!contentTrue) { 
-      improved.content = null
-    }
+    // ... destroy object if no items found
+    if(!atLeastOneContent) improved.content = null
 
-    // ... playback state - single item
-    improved.playbackstate = null
+    // single item playback state
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
       improved.playbackstate = raw.TransportState.toLowerCase()
     }
@@ -105,10 +129,10 @@ module.exports = {
     return improved
   },
 
-  improvedDeviceProperties: async function (raw) {
+  improvedDeviceProperties: async (raw) => {
     debug('method >>%s', 'improvedDeviceProperties')
     
-    const improved = {}
+    const improved = { raw }
 
     improved.micEnabled = null
     if (module.exports.isValidProperty(raw, ['MicEnabled'])) {
@@ -118,18 +142,28 @@ module.exports = {
     return improved
   },
 
-  improvedGroupRenderingData: async function (raw) {
-    debug('method >>%s', 'transformGroupRenderingData')
+  improvedGroupManagement: async (raw) => {
+    debug('method >>%s', 'improvedGroupManagementService')
     
-    const improved = {}
+    const improved = { 'localGroupUuid': null, raw }
 
-    improved.groupMutestate = null
+    if (module.exports.isValidProperty(raw, ['LocalGroupUUID'])) {
+      improved.localGroupUuid = raw.LocalGroupUUID
+    }
+
+    return improved
+  },
+
+  improvedGroupRendering: async (raw) => {
+    debug('method >>%s', 'improvedGroupRenderingData')
+    
+    const improved = { 'groupMutestate': null, 'groupVolume': null,  raw }
+
     if (module.exports.isValidProperty(raw, ['GroupMute'])) {
       improved.groupMutestate = (raw.GroupMute ? 'on' : 'off')
       debug('groupMuteState >>%s', improved.groupMutestate)
     }
 
-    improved.groupVolume = null
     if (module.exports.isValidProperty(raw, ['GroupVolume'])) {
       improved.groupVolume = String(raw.GroupVolume)
       debug('groupVolume >>%s', improved.groupVolume)
@@ -138,43 +172,27 @@ module.exports = {
     return improved
   },
 
-  improvedGroupManagementService: async function (raw) {
-    debug('method >>%s', 'improvedGroupManagementService')
-    
-    const improved = {}
-
-    improved.localGroupUuid = null
-    if (module.exports.isValidProperty(raw, ['LocalGroupUUID'])) {
-      improved.localGroupUuid = raw.LocalGroupUUID
-    }
-
-    return improved
-  },
-
-  improvedRenderingControl: async function (raw) {
+  improvedRenderingControl: async (raw) => {
     debug('method >>%s', 'improvedRenderingControl')
     
-    const improved = {}
+    const improved = { 'mutestate': null, 'volume': null,  raw }
     
-    improved.volume = null
+    if (module.exports.isValidProperty(raw, ['Mute', 'Master'])) {
+      improved.mutestate = (raw.Mute.Master? 'on' : 'off')
+    }
+    
     if (module.exports.isValidProperty(raw, ['Volume', 'Master'])) {
       improved.volume = String(raw.Volume.Master)
     }
 
-    improved.mutestate = null
-    if (module.exports.isValidProperty(raw, ['Mute', 'Master'])) {
-      improved.mutestate = (raw.Mute.Master? 'on' : 'off')
-    }
-
     return improved
   },
 
-  improvedZoneData: async function (raw) {
+  improvedZoneGroupTopology: async (raw) => {
     debug('method >>%s', 'improvedZoneData')
     
-    const improved = {}
+    const improved = { 'allGroups': null, raw }
 
-    improved.allGroups = null
     if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
       improved.allGroups = raw.ZoneGroupState
     }

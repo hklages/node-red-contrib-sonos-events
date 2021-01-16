@@ -35,7 +35,7 @@ module.exports = function (RED) {
   RED.nodes.registerType('sonosevents-config', sonosEventsConfigNode)
 
   //
-  //                                      Discovery
+  //                                      Discovery & Local IP address
   // .......................................................................................
 
   RED.httpNode.get('/nrcse/*', function (req, response) {
