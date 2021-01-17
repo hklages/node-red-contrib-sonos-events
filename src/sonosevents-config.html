@@ -22,14 +22,34 @@
       return this.name;
     },
     oneditprepare: function() { 
+
+      // listener hostname text field: enter ip or get a list
+      try {
+        $('#node-config-input-listenerHostname').autocomplete('destroy')
+      } catch (err) {}
+      
       $('#node-lookup-listenerHostname').click(function() {
-        $.getJSON('nrcse/getIp', function(ip) {
-         })
-         $.getJSON('nrcse/getENVListener', function(env) {
-         })
-         $.getJSON('nrcse/getIpStephan', function(ip) {
-          $('#node-config-input-listenerHostname').val(ip)
-         })
+        $('#node-lookup-listenerHostname-icon').removeClass('fa-search')
+        $('#node-lookup-listenerHostname-icon').addClass('spinner')
+        $('#node-config-input-listenerHostname').addClass('disabled')
+        $.getJSON('nrcse/getMultipeIps', function(ips) {
+          $('#node-lookup-listenerHostname-icon').addClass('fa-search')
+          $('#node-lookup-listenerHostname-icon').removeClass('spinner')
+          $('#node-lookup-listenerHostname').removeClass('disabled')
+          var dataArray = []
+          $.each(ips, function(i, element) {
+            dataArray.push(element)
+          })
+          $('#node-config-input-listenerHostname')
+            .autocomplete({
+              source: dataArray,
+              minLength: 0,
+              close: function(event, ui) {
+                $('#node-config-input-listenerHostname').autocomplete('destroy')
+              }
+            })
+            .autocomplete('search', '')
+        })
       })
     }
   });
@@ -38,10 +58,11 @@
 <!-- Setting design and inputs for node panel (HTML)-->
 <script type="text/html" data-template-name="sonosevents-config">
 
+  <!-- listener hostname -->
   <div class="form-row">
     <label for="node-config-input-listenerHostname" style="width: 30%;"><i class="fa fa-globe"></i> Listener hostname</label>
     <input type="text" id="node-config-input-listenerHostname" placeholder="use default" style="width: auto;">
-    <button type="button" id="node-lookup-listenerHostname" class="red-ui-button"><i id="node-lookup-listener-icon" class="fa fa-search"></i></button>
+    <button type="button" id="node-lookup-listenerHostname" class="red-ui-button"><i id="node-lookup-listenerHostname-icon" class="fa fa-search"></i></button>
   </div>
 
   <div class="form-tips">
@@ -51,6 +72,7 @@
     You need to restart Node-RED to apply this change. 
   </div><br>
 
+  <!-- listener port -->
   <div class="form-row">
    <label for="node-config-input-listenerPort" style="width: 30%;"><i class="fa fa-globe"></i> Listener port</label>
     <input type="text" id="node-config-input-listenerPort" placeholder="use default" style="width: auto;">
@@ -63,11 +85,13 @@
     You need to restart Node-RED to apply this change.
   </div><br>
 
+  <!-- Node name -->
   <div class="form-row">
     <label for="node-config-input-name" style="width: 30%;"><i class="fa fa-tag"></i> Name</label>
     <input type="text" id="node-config-input-name" placeholder="household" style="width: auto;"/>
   </div>
 
+  <!-- Dialog help -->
   <div class="form-tips">
     Help
 

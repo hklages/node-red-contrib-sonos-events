@@ -149,58 +149,47 @@
 
 <!-- Setting design and inputs for node panel (HTML)-->
 <script type="text/html" data-template-name="sonosevents-selection">
-  <style>
-    label.event-checkbox {
-        display: block !important;
-        width: auto !important;
-    }
-    label.event-checkbox input {
-        width: auto !important;
-        margin-top: -3px !important;
-    }
-  </style>
-  
-  <div id="main-props">
-    <!-- Config node -->
-    <div class="form-row">
-      <label for="node-input-confignode" style="width: 25%;"><i class="fa fa-gear" ></i> Config node</label>
-      <input type="text" id="node-input-confignode" readonly style="width: auto;">
-    </div>
-    <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
-      Config node:  The default name is household. Please use only ONE config node for all nodes. Don't mix up. 
-      Use the Node-RED menu item Configuration Nodes to remove duplicates.
-     </div><br>
 
-    <!-- SONOS player hostname such such 192.168.178.37-->
-    <div class="form-row">
-      <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player </label>
-      <input type="text" id="node-input-playerHostname"  placeholder="192.168.x.x" style="width: 60%;">
-      <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
-    </div>
-    <div class="form-tips">
-      Player:  Use the search button to discover SONOS player in your local network and select a player.
-    </div><br>
+  <!-- Config node -->
+  <div class="form-row">
+    <label for="node-input-confignode" style="width: 25%;"><i class="fa fa-gear" ></i> Config node</label>
+    <input type="text" id="node-input-confignode" readonly style="width: auto;">
+  </div>
+  <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
+    Config node:  The default name is household. Please use only ONE config node for all nodes. Don't mix up. 
+    Use the Node-RED menu item Configuration Nodes to remove duplicates.
+   </div><br>
 
-    <!-- Events-->
-    <div class="form-row node-input-events-container-row">
-      <ol id="node-input-events-container"></ol>
-   </div>
+  <!-- SONOS player hostname such such 192.168.178.37-->
+  <div class="form-row">
+    <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player </label>
+    <input type="text" id="node-input-playerHostname"  placeholder="192.168.x.x" style="width: 60%;">
+    <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
+  </div>
+  <div class="form-tips">
+    Player:  Use the search button to discover SONOS player in your local network and select a player.
+  </div><br>
 
-    <!-- Amount of outputs -->
-    <div class="form-row">
-      <input type="hidden" id="node-input-outputs" />
-    </div>
+  <!-- Events-->
+  <div class="form-row node-input-events-container-row">
+    <ol id="node-input-events-container"></ol>
+  </div>
 
-    <!-- Node name -->
-    <div class="form-row">
-      <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
-      <input type="text" id="node-input-name" placeholder="This node name" />
-    </div>
-    <br>
+  <!-- Amount of outputs -->
+  <div class="form-row">
+    <input type="hidden" id="node-input-outputs" />
+  </div>
+
+  <!-- Node name -->
+  <div class="form-row">
+    <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="This node name" />
+  </div>
+  <br>
     
-    <!-- Dialog help -->
+  <!-- Dialog help -->
     Further information: See the help text.
-  </div>  
+
   
 </script>
 

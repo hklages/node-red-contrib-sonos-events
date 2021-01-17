@@ -23,7 +23,7 @@ Either open a github issue (preferred method) or send an email to nrcsplus@gmail
 
 ### NEWS
 
-- 3 nodes for household, group, player
+- 1 single node for all events
 
 ### Installation
 

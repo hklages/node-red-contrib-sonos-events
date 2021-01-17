@@ -10,8 +10,9 @@
 
 'use strict'
 
-const { discoverPlayers, discoverCoordinators, getRightCcuIp, getIpStephan
+const { discoverPlayers, discoverCoordinators, getRightCcuIp, getIpStephan, getMultipleIps
 } = require('./Discovery.js')
+const { isValidPropertyNotEmptyString } = require('./Helper.js')
 
 const debug = require('debug')('nrcse:config')
 
@@ -21,14 +22,20 @@ module.exports = function (RED) {
     debug('method >>%s', 'sonosEventNode')
     RED.nodes.createNode(this, config)
 
-    if (config.listenerHostname) {
+    if (isValidPropertyNotEmptyString(config, ['listenerHostname'])) {
       process.env.SONOS_LISTENER_HOST = config.listenerHostname
       debug('listener modified - new hostname >>%s', config.listenerHostname)
+    } else {
+      delete process.env.SONOS_LISTENER_HOST
+      debug('ENV SONOS_LISTENER_HOST deleted')
     }
     
-    if (config.listenerPort) {
+    if (isValidPropertyNotEmptyString(config, ['listenerPort'])) {
       process.env.SONOS_LISTENER_PORT = config.listenerPort
       debug('listener modified - new port >>%s', config.listenerPort)
+    } else {
+      delete process.env.SONOS_LISTENER_PORT
+      debug('ENV SONOS_LISTENER_PORT deleted')
     }
   }
 
@@ -70,6 +77,16 @@ module.exports = function (RED) {
         })
       break
       
+    case 'getMultipeIps':
+      getMultipleIps()
+        .then((ipList) => {
+          response.json(ipList)
+        })
+        .catch((error) => {
+          debug('error getIp >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
+      break
+
     case 'getIpStephan':
       getIpStephan()
         .then((ipList) => {

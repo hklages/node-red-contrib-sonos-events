@@ -99,8 +99,12 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
   if (!isTruthyAndNotEmptyString(env_listenerHostname)) {
     process.env.SONOS_LISTENER_HOST = alternativeHostname
     debug('listener hostname >>', alternativeHostname)
+  } else {
+    // package node-sonos-ts uses the SONOS-LISTENER_HOST (overrules others)
+    debug('ENV used with value %s', env_listenerHostname)
   }
 
+  // subscribe to the specified services/events
   serviceArray.forEach(async function (serviceName) {
     await player[serviceName].Events.on('serviceEvent',
       sendServiceMsgs.bind(this, serviceName, eventsByServices[serviceName], outputs))

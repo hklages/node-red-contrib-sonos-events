@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.3.1] 2021-01-18
+
+#### Changed
+
+- now delete ENV variable if config text field is empty
+
+- now select ip address in config node
+
+- some bug fixing
+
 ### [0.3.0] 2021-01-17
 
 #### Changed
