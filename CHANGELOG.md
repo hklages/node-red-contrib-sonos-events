@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.3.0] 2021-01-17
+
+#### Changed
+
+- one node for all events per player - all others nodes are "gone"S
+
+- new algorithm to find ip address for listener
+
+- code optimization
+
 ### [0.2.0] 2021-01-15
 
 #### Changed

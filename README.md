@@ -6,14 +6,14 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/hklages/node-red-contrib-sonos-plus/master/LICENSE)
 [![Donation](https://img.shields.io/badge/donation-cappuccino-orange)](https://www.buymeacoffee.com/hklages)
 
------ CAUTION: 2020-12 & 2021-01 A LOT OF FLOW BREAKING CHANGES WILL BE IMPLEMENTED - NO SUPPORT DURING THIS TIME --------
+----- CAUTION: 2020-12 & 2021-01 A LOT OF FLOW BREAKING CHANGES WILL BE IMPLEMENTED --------
 
-A set of [Node-RED](https://nodered.org/) nodes to receive events from [SONOS](https://www.sonos.com/) player in your local network.
+A single [Node-RED](https://nodered.org/) node to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 
 Subscribe to a growing list of event types to get notifications about changes related to tracks, playback state, volume, mute state, group volume, group mute state, topology, ...
 Reduce traffic and load by subscribing only to specific players and groups.
 
-Works (strives for well) with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md).
+Works well with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md).
 
 This package is in no way connected to or supported by Sonos Incorporation.
 

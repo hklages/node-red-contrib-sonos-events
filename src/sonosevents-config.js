@@ -10,7 +10,8 @@
 
 'use strict'
 
-const { discoverPlayers, discoverCoordinators, getIp, getIpStephan } = require('./Discovery.js')
+const { discoverPlayers, discoverCoordinators, getRightCcuIp, getIpStephan
+} = require('./Discovery.js')
 
 const debug = require('debug')('nrcse:config')
 
@@ -20,18 +21,17 @@ module.exports = function (RED) {
     debug('method >>%s', 'sonosEventNode')
     RED.nodes.createNode(this, config)
 
-    // TODO how to check whether changes?
     if (config.listenerHostname) {
       process.env.SONOS_LISTENER_HOST = config.listenerHostname
       debug('listener modified - new hostname >>%s', config.listenerHostname)
     }
     
-    // TODO how to check whether changes?
     if (config.listenerPort) {
       process.env.SONOS_LISTENER_PORT = config.listenerPort
       debug('listener modified - new port >>%s', config.listenerPort)
     }
   }
+
   RED.nodes.registerType('sonosevents-config', sonosEventsConfigNode)
 
   //
@@ -59,33 +59,43 @@ module.exports = function (RED) {
           debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
         })
       break
-    
+      
     case 'getIp':
-      getIp(0)
+      getRightCcuIp(0)
         .then((ipList) => {
-          console.log(JSON.stringify(ipList))
           response.json(ipList)
         })
         .catch((error) => {
-          debug('error getiI >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+          debug('error getIp >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
         })
-            
       break
       
     case 'getIpStephan':
       getIpStephan()
         .then((ipList) => {
-          console.log(JSON.stringify(ipList))
           response.json(ipList)
         })
         .catch((error) => {
           // eslint-disable-next-line max-len
           debug('error stephan getIp >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
         })
-                
       break
        
+    case 'getEnvListenerHost': {
+      const hostname = process.env.SONOS_LISTENER_HOST 
+      response.json(`listener hostname >>${hostname}`)
+      break
+    }
+      
+    case 'getEnvListenerPort': { 
+      const port = process.env.SONOS_LISTENER_PORT
+      response.json(`listener port >>${port}`)
+      break
+    }
+      
+    default:
+      response.json('endpoint is not defined')
+      
     }   
   })
-
 }

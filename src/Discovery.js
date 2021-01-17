@@ -64,7 +64,7 @@ module.exports = {
     return reducedList
   },
 
-  getIp: async (idx) => {
+  getRightCcuIp: async (idx) => {
 
     const addresses = []
     const interfaces = networkInterfaces()

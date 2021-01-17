@@ -4,6 +4,10 @@
   RED.nodes.registerType('sonosevents-selection', {
     category: 'sonosevents',
     defaults: {
+      confignode: {
+        value: 'household',
+        type: 'sonosevents-config'
+      },
       playerHostname: { 
         value: '',
         required: true
@@ -91,7 +95,7 @@
       // -- set the basics
       // index default
       const defaultEventIndex = 4
-      $('#node-input-events-container').css('min-height','500px').css('min-width','400px').editableList({
+      $('#node-input-events-container').css('min-height','400px').css('min-width','400px').editableList({
         header: $('<div>').append($.parseHTML('<div>Event name - order defines outputs</div>')),
         sortable: true,
         removable: true, 
@@ -157,6 +161,16 @@
   </style>
   
   <div id="main-props">
+    <!-- Config node -->
+    <div class="form-row">
+      <label for="node-input-confignode" style="width: 25%;"><i class="fa fa-gear" ></i> Config node</label>
+      <input type="text" id="node-input-confignode" readonly style="width: auto;">
+    </div>
+    <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
+      Config node:  The default name is household. Please use only ONE config node for all nodes. Don't mix up. 
+      Use the Node-RED menu item Configuration Nodes to remove duplicates.
+     </div><br>
+
     <!-- SONOS player hostname such such 192.168.178.37-->
     <div class="form-row">
       <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player </label>

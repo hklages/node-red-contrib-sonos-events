@@ -10,12 +10,13 @@
 
 'use strict'
 const {
-  isValidProperty, improvedServiceData }
-  = require('./Helper')
+  isValidProperty, improvedServiceData, isTruthyAndNotEmptyString
+} = require('./Helper')
+
+const { getRightCcuIp } = require('./Discovery.js')
   
 const { SonosDevice } = require('@svrooij/sonos/lib')
-// TODO check please
-//const { AVTransportService } = require('@svrooij/sonos/lib/services')
+
 const debug = require('debug')('nrcse:selection')
 
 module.exports = function (RED) {
@@ -38,7 +39,7 @@ module.exports = function (RED) {
     const subscriptions = config.events
     // for each service create the required events with corresponding output index
     const eventsByServices = {}
-    // TODO define . as general delimiter!
+    //  . as general delimiter!
     for (let i = 0; i < subscriptions.length; i++) {
       const [serviceName, eventName] = subscriptions[i].fullName.split('.')
       if (!isValidProperty(eventsByServices, [serviceName])) {
@@ -91,6 +92,15 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     return acc + Object.keys(eventsByServices[current]).length
   }, 0)
 
+  // the node-sonos-ts build in program returns a wrong ip on CCU3 systems.  
+  // Therefore I use getRightCcuIp to correct that. 
+  const alternativeHostname = await getRightCcuIp(0)
+  const env_listenerHostname = process.env.SONOS_LISTENER_HOST
+  if (!isTruthyAndNotEmptyString(env_listenerHostname)) {
+    process.env.SONOS_LISTENER_HOST = alternativeHostname
+    debug('listener hostname >>', alternativeHostname)
+  }
+
   serviceArray.forEach(async function (serviceName) {
     await player[serviceName].Events.on('serviceEvent',
       sendServiceMsgs.bind(this, serviceName, eventsByServices[serviceName], outputs))
@@ -128,12 +138,10 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
       node.debug(`error processing AVTransport event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
     }
   }
-
 }
 
 async function cancelAllSubscriptions (player, eventsByServices) {
   
-  // TODO How to unsubscribe only those created by this node (not impacting nodes with same ip)
   const serviceArray = Object.keys(eventsByServices)
   serviceArray.forEach(async function (serviceName) {
     await player[serviceName].Events.removeAllListeners('serviceEvent')
