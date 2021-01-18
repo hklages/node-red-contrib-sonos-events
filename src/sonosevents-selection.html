@@ -188,15 +188,26 @@
   <br>
     
   <!-- Dialog help -->
-    Further information: See the help text.
-
-  
+    Further information: See the help.
 </script>
 
 <!-- Help text (HTML) -->
 <script type="text/html" data-help-name="sonosevents-selection">
   
-    
-  <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more about Events</a>
+  <p>Select the player you want to subscribe to and add the events.</p> 
+
+  Most useful events are: 
+  <ul>
+    <li> AVTransport content. Trigger: track change. Output: album, artist, title, artUri </li>
+    <li> AVTransport playbackstate. Trigger: stop, pause, play, ..  Output: new playbackstate </li>
+    <li> GroupRenderingControl groupMute or groupVolume. Trigger: changes in group volume, group mute state </li>
+  </ul>
+  
+  <br>
+  Keep in Mind that for many of these events you have to subscribe to the coordinator of group. 
+  <br><br>
+  Best practice: Only one node per group or per player and distribute the results via link nodes. 
+ <br><br>
+  <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more Information ...</a>
     
 </script>

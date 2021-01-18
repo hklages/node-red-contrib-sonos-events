@@ -10,8 +10,10 @@
 
 'use strict'
 
-const { discoverPlayers, discoverCoordinators, getRightCcuIp, getIpStephan, getMultipleIps
+const { discoverPlayers, discoverCoordinators, discoverGroupsAll,
+  getRightCcuIp, getIpStephan, getMultipleIps
 } = require('./Discovery.js')
+
 const { isValidPropertyNotEmptyString } = require('./Helper.js')
 
 const debug = require('debug')('nrcse:config')
@@ -67,6 +69,15 @@ module.exports = function (RED) {
         })
       break
       
+    case 'discoverGroups':
+      discoverGroupsAll()
+        .then((playerList) => {
+          response.json(playerList)
+        })
+        .catch((error) => {
+          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        })
+      break
     case 'getIp':
       getRightCcuIp(0)
         .then((ipList) => {

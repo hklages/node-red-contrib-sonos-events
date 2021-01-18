@@ -118,6 +118,10 @@ module.exports = {
       improved.content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
       atLeastOneContent = true
     }  
+    // added this without atLeastOneContent as it is helpful but not necessary
+    if (module.exports.isValidProperty(raw, ['TransportState'])) {
+      improved.content.playbackstate = raw.TransportState.toLowerCase()
+    }
     // ... destroy object if no items found
     if(!atLeastOneContent) improved.content = null
 

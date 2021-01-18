@@ -92,8 +92,23 @@
   </div>
 
   <!-- Dialog help -->
-  <div class="form-tips">
-    Help
+    Further information: See the help.
+</script>
 
-  </div>
+!-- Help text (HTML) -->
+<script type="text/html" data-help-name="sonosevents-config">
+  
+  We need to set up a http server to subscribe to and receive the SONOS player notifications. 
+  <br>
+  This http server runs at specific host (aka IP address) and port. You can get the current 
+  status with in your browser at http://host:port/status<br><br>
+  
+  The server is being started when the first subscription has been deployed and shut downs when no more 
+  subscriptions are active.<br><br>
+
+  There will only be one server (singleton) but you can subscribe to any SONOS player in 
+  the selection node.<br><br>
+
+  <a href="https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications">more Information ...</a>
+    
 </script>

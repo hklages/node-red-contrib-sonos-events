@@ -21,7 +21,7 @@ const debug = require('debug')('nrcse:Sonos-Commands')
 
 module.exports = {
 
-  /** Get array of all groups. Each group consist of an array of players<playerGroupData>  
+  /** Get array of all groups. Each group consist of an array of players <playerGroupData>[]  
    * Coordinator is always in position 0. Group array may have size 1 (standalone)
    * @param  {object} player sonos-ts player
    * 
@@ -31,11 +31,13 @@ module.exports = {
    * @throws {error} GetZoneGroupState, isValidPropertyNotEmptySTring, isTruthyAndNotEmptySTring
    * @throws {error} 
    */
-  getGroupsAllFast: async function (player) {
+  getGroupsAllFast: async function (anyPlayer) {
     debug('method >>%s', 'getGroupsAllFast')
+    
     // get the data from SONOS player and transform to JavaScript Objects
-    const householdPlayers = await player.GetZoneGroupState()
-    // select only ZoneGroupState not the other attributes
+    const householdPlayers = await anyPlayer.GetZoneGroupState()
+    
+    // select only ZoneGroupState not the other attributes and check
     if (!isValidPropertyNotEmptyString(householdPlayers, ['ZoneGroupState'])) {
       throw new Error(`${PACKAGE_PREFIX} property ZoneGroupState is missing`)
     }
@@ -49,6 +51,7 @@ module.exports = {
     if (!isValidProperty(groups, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
       throw new Error(`${PACKAGE_PREFIX} response form parse xml: properties missing.`)
     }
+
     // convert single item to array: all groups array and all members array
     let groupsArray
     if (Array.isArray(groups.ZoneGroupState.ZoneGroups.ZoneGroup)) {
@@ -77,7 +80,7 @@ module.exports = {
       groupSorted = []
       coordinatorUuid = groupsArray[iGroup]._Coordinator
       groupId = groupsArray[iGroup]._ID
-      // first push coordinator, others will be updated later!
+      // first push coordinator, other properties will be updated later!
       groupSorted.push({ groupId, 'uuid': coordinatorUuid })
       
       for (let iMember = 0; iMember < groupsArray[iGroup].ZoneGroupMember.length; iMember++) {
@@ -87,9 +90,9 @@ module.exports = {
         // my naming is playerName instead of the SONOS ZoneName
         playerName = groupsArray[iGroup].ZoneGroupMember[iMember]._ZoneName
         invisible = (groupsArray[iGroup].ZoneGroupMember[iMember]._Invisible === '1')
-        channelMapSet = groupsArray[iGroup].ZoneGroupMember[iMember]._ChannelMapSet || ''
-        
+        channelMapSet = groupsArray[iGroup].ZoneGroupMember[iMember]._ChannelMapSet || ''      
         if (groupsArray[iGroup].ZoneGroupMember[iMember]._UUID !== coordinatorUuid) {
+          // push new except coordinator
           groupSorted.push({ url, playerName, uuid, groupId, invisible, channelMapSet })
         } else {
           // update coordinator on position 0 with name

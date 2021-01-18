@@ -20,6 +20,17 @@ const debug = require('debug')('nrcse:Discovery')
 
 module.exports = {
 
+  discoverGroupsAll: async () => {
+    // discover the first player. 
+    const deviceDiscovery = new SonosDeviceDiscovery()
+    debug('starting discovery')
+    const firstPlayerData = await deviceDiscovery.SearchOne(5)
+    debug('found one player found')
+    const firstPlayer = new SonosDevice(firstPlayerData.host)
+    const allGroups = await getGroupsAllFast(firstPlayer)
+    return allGroups
+  },
+  
   discoverPlayers: async () => {
     // discover the first one an get all others because we need also the player names
     // and thats very reliable -deterministic. Discovering 10 player might be time consuming
@@ -118,6 +129,8 @@ module.exports = {
   },
 
   getIpStephan: async () => {
+    // now the new version since 2021-01-18
+
     const ifaces = networkInterfaces()
 
     let interfaces = Object.keys(ifaces).filter((k) => k !== 'lo0')
@@ -125,7 +138,8 @@ module.exports = {
       interfaces = interfaces.filter((i) => i === process.env.SONOS_LISTENER_INTERFACE)
     } else {
       // Remove unwanted interfaces on windows
-      interfaces = interfaces.filter((i) => i.indexOf('vEthernet') === -1)
+      interfaces = interfaces.filter((i) => i.indexOf('vEthernet') === -1
+        && i.indexOf('tun') === -1)
     }
     if (interfaces === undefined || interfaces.length === 0) {
       throw new Error('No network interfaces found')
@@ -133,14 +147,17 @@ module.exports = {
 
     let address
 
-    interfaces.forEach((inf) => {
+    interfaces.every((inf) => {
       const currentInterface = ifaces[inf]
-      if (currentInterface === undefined) return
+      if (currentInterface === undefined) return true
       const info = currentInterface.find((i) => i.family === 'IPv4' && i.internal === false)
       if (info !== undefined) {
         address = info.address
+        return false
       }
+      return true
     })
+
     if (address !== undefined) return address
     throw new Error('No non-internal ipv4 addresses found')
   }

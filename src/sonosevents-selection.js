@@ -131,7 +131,7 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
           const msg = new Array(outputs).fill(null)
           const payload = improved[eventName]
           const topic = topicPrefix + eventName
-          msg[mapEventToOutput[eventName]] = { payload, topic }
+          msg[mapEventToOutput[eventName]] = { payload, topic, raw }
           node.send(msg)
         }  
       })
