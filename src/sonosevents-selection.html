@@ -13,7 +13,14 @@
         required: true
       },
       events: {
-        value:[ {fullName:'AVTransportService.playbackstate'}, {fullName:'AVTransportService.content'} ]
+        value:[ {fullName:'AVTransportService.playbackstate'}, {fullName:'AVTransportService.content'} ],
+        validate: function (v) {
+          const simpleArray = v.map((item) => item.fullName)
+          const findDuplicates = (simpleArray.filter((item, index) => simpleArray.indexOf(item) != index))
+          const atLeastOne = (v.length !== 0)
+          return (findDuplicates.length === 0 && atLeastOne)
+        }
+      
       },
       outputs: { 
         value: 2
@@ -66,35 +73,41 @@
       // events container: add additional items
       const availableEvents = [
         {fullName:'AudioInService.raw', description: 'AudioIn raw'},  
-        {fullName:'AudioInService.playing', description: 'AudioIn playing'},  
+        {fullName:'AudioInService.lineInConnected', description: 'AudioIn line in connected'},  
         {fullName:'AlarmClockService.raw', description: 'AlarmClock raw'},
+        {fullName:'AlarmClockService.alarmListVersion', description: 'AlarmClock list version'},
         {fullName:'AVTransportService.raw', description: 'AVTransport raw'},
-        {fullName:'AVTransportService.content', description: 'AVTransport content: track, album, title ...'},  // default
         {fullName:'AVTransportService.basics', description: 'AVTransport basics'},
+        {fullName:'AVTransportService.content', description: 'AVTransport content: track, album, title ...'},  // default
         {fullName:'AVTransportService.playbackstate', description: 'AVTransport playbackstate'},
         {fullName:'ConnectionManagerService.raw', description: 'ConnectionManager raw'},
+        {fullName:'ConnectionManagerService.currentConnectionIds', description: 'ConnectionManager current connection ids'},
         {fullName:'ContentDirectoryService.raw', description: 'ContentDirectory raw'},
+        {fullName:'ContentDirectoryService.mySonosUpdateId', description: 'ContentDirectory My Sonos update id'},
         {fullName:'DevicePropertiesService.raw', description: 'DevicePropertiesService raw'},
         {fullName:'DevicePropertiesService.micEnabled', description: 'DevicePropertiesService micEnabled'},
+        {fullName:'DevicePropertiesService.invisible', description: 'DevicePropertiesService invisible'},
         {fullName:'GroupManagementService.raw', description: 'GroupManagement raw'},
         {fullName:'GroupManagementService.localGroupUuid', description: 'GroupManagement localGroupUuid'},
         {fullName:'GroupRenderingControlService.raw', description: 'GroupRenderingControl raw'},
-        {fullName:'GroupRenderingControlService.groupVolume', description: 'GroupRenderingControl groupVolume'},
         {fullName:'GroupRenderingControlService.groupMutestate', description: 'GroupRenderingControl groupMutestate'},
+        {fullName:'GroupRenderingControlService.groupVolume', description: 'GroupRenderingControl groupVolume'},
         {fullName:'MusicServicesService.raw', description: 'MusicServices raw'},
+        {fullName:'MusicServicesService.serviceListVersion', description: 'MusicServices list version'},
         {fullName:'QueueService.raw', description: 'QueueService raw'},
+        {fullName:'QueueService.updateId', description: 'QueueService update id'},
         {fullName:'RenderingControlService.raw', description: 'RenderingControl raw'},
-        {fullName:'RenderingControlService.volume', description: 'RenderingControl volume'},
         {fullName:'RenderingControlService.mutestate', description: 'RenderingControl mutestate'},
+        {fullName:'RenderingControlService.volume', description: 'RenderingControl volume'},
         {fullName:'SystemPropertiesService.raw', description: 'SystemProperties raw'},
-        {fullName:'VirtualLineInService.raw', description: 'VirtualLineIn raw'},
+        {fullName:'SystemPropertiesService.updateId', description: 'SystemProperties update id'},
         {fullName:'ZoneGroupTopologyService.raw', description: 'ZoneGroupTopology raw'},
         {fullName:'ZoneGroupTopologyService.allGroups', description: 'ZoneGroupTopology allGroups'}
       ]
 
       // -- set the basics
       // index default
-      const defaultEventIndex = 4
+      const defaultEventIndex = 6
       $('#node-input-events-container').css('min-height','400px').css('min-width','400px').editableList({
         header: $('<div>').append($.parseHTML('<div>Event name - order defines outputs</div>')),
         sortable: true,
@@ -108,7 +121,7 @@
           }
           let row = $('<div/>').appendTo(container)
           let selectField = $('<select/>').appendTo(row)
-          selectField.width(370)
+          selectField.width(350)
 
           for (let index = 0; index < availableEvents.length; index++) {
             selectField.append(`<option value="${availableEvents[index].fullName}">${availableEvents[index].description}</option>`)
@@ -156,8 +169,8 @@
     <input type="text" id="node-input-confignode" readonly style="width: auto;">
   </div>
   <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
-    Config node:  The default name is household. Please use only ONE config node for all nodes. Don't mix up. 
-    Use the Node-RED menu item Configuration Nodes to remove duplicates.
+    Config node: Default name is household. Please use only ONE config node for all nodes. 
+    Use Node-RED menu item Configuration Nodes to remove duplicates.
    </div><br>
 
   <!-- SONOS player hostname such such 192.168.178.37-->
@@ -167,13 +180,16 @@
     <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
   </div>
   <div class="form-tips">
-    Player:  Use the search button to discover SONOS player in your local network and select a player.
+    Player: Use search button to discover SONOS player in your local network and select one.
   </div><br>
 
   <!-- Events-->
   <div class="form-row node-input-events-container-row">
     <ol id="node-input-events-container"></ol>
   </div>
+  <div class="form-tips">
+    Events: Choose at least one, duplicates are not allowed.
+  </div><br>
 
   <!-- Amount of outputs -->
   <div class="form-row">

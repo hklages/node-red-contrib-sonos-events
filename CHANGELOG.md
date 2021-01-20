@@ -2,15 +2,31 @@
 
 All notable changes to this project are documented in this file.
 
-### [0.3.2] 2021-01-19
+### [0.4.0] 2021-01-20
+
+#### Changed
+
+- using different algorithm to get the local ip - should work on CCU and more devices
+
+- added more events
+
+- topology group now with array as array - thats easier to process then array of object
+
+- some properties are renamed
+
+- update documentation Wiki
+
+- update dev dependencies
+
+### [0.3.2] 2021-01-18
+
+#### Changed
 
 - dependencies node-sonos-ts 2.3.0
 
 - additional endpoints
 
-- update documentationC
-
-#### Changed
+- update documentation
 
 ### [0.3.1] 2021-01-18
 

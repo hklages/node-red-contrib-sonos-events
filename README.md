@@ -1,4 +1,4 @@
-## node-red-contrib-sonos-plus
+## node-red-contrib-sonos-events
 
 [![Dependencies](https://david-dm.org/hklages/node-red-contrib-sonos-events.svg)](https://david-dm.org/hklages/node-red-contrib-sonos-events)
 [![npm](https://img.shields.io/npm/dt/node-red-contrib-sonos-events.svg)](https://www.npmjs.com/package/node-red-contrib-sonos-events)
@@ -18,7 +18,7 @@ This package is in no way connected to or supported by Sonos Incorporation.
 
 ### SUPPORT
 
-See the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications)
+Read the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications)
 
 Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com
 
@@ -26,7 +26,7 @@ Either open a github issue (preferred method) or send an email to nrcsplus@gmail
 
 - Single node for all events.
 
-- Should now wokr out of the box with RedMatic.
+- Should now work out of the box with RedMatic.
 
 ### Installation
 

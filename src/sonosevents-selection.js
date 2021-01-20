@@ -10,10 +10,8 @@
 
 'use strict'
 const {
-  isValidProperty, improvedServiceData, isTruthyAndNotEmptyString
+  isValidProperty, filterAndImproveServiceData
 } = require('./Helper')
-
-const { getRightCcuIp } = require('./Discovery.js')
   
 const { SonosDevice } = require('@svrooij/sonos/lib')
 
@@ -92,17 +90,18 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     return acc + Object.keys(eventsByServices[current]).length
   }, 0)
 
-  // the node-sonos-ts build in program returns a wrong ip on CCU3 systems.  
-  // Therefore I use getRightCcuIp to correct that. 
-  const alternativeHostname = await getRightCcuIp(0)
-  const env_listenerHostname = process.env.SONOS_LISTENER_HOST
-  if (!isTruthyAndNotEmptyString(env_listenerHostname)) {
-    process.env.SONOS_LISTENER_HOST = alternativeHostname
-    debug('listener hostname >>', alternativeHostname)
-  } else {
-    // package node-sonos-ts uses the SONOS-LISTENER_HOST (overrules others)
-    debug('ENV used with value %s', env_listenerHostname)
-  }
+  // TODO has to be removed after testing on CCU
+  // // the node-sonos-ts build in program returns a wrong ip on CCU3 systems.
+  // // Therefore I use getRightCcuIp to correct that. 
+  // const alternativeHostname = await getRightCcuIp(0)
+  // const env_listenerHostname = process.env.SONOS_LISTENER_HOST
+  // if (!isTruthyAndNotEmptyString(env_listenerHostname)) {
+  //   process.env.SONOS_LISTENER_HOST = alternativeHostname
+  //   debug('listener hostname >>', alternativeHostname)
+  // } else {
+  //   // package node-sonos-ts uses the SONOS-LISTENER_HOST (overrules others)
+  //   debug('ENV used with value %s', env_listenerHostname)
+  // }
 
   // subscribe to the specified services/events
   serviceArray.forEach(async function (serviceName) {
@@ -123,16 +122,25 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     try {
       // define msg s
       const topicPrefix = `${player.host}/${serviceName}/`
-      const improved = await improvedServiceData(serviceName, raw)
+      const improved = await filterAndImproveServiceData(serviceName, raw)
       
       const eventNames = Object.keys(mapEventToOutput)
       eventNames.forEach(eventName => {
         if (isValidProperty(mapEventToOutput, [eventName])) {
           const msg = new Array(outputs).fill(null)
-          const payload = improved[eventName]
           const topic = topicPrefix + eventName
-          msg[mapEventToOutput[eventName]] = { payload, topic, raw }
-          node.send(msg)
+          if (eventName === 'raw') {
+            // raw means no event filter, original data
+            msg[mapEventToOutput[eventName]] = { 'payload': raw, topic }
+            node.send(msg)
+          } else {
+            // we have to remove null events
+            if (improved[eventName] !== null) {
+              const payload = improved[eventName]   
+              msg[mapEventToOutput[eventName]] = { payload, topic, raw }
+              node.send(msg)
+            }
+          }
         }  
       })
     } catch (error) {

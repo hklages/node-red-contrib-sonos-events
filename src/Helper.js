@@ -14,116 +14,132 @@ const debug = require('debug')('nrcse:Helper')
 
 module.exports = {
 
-  // improve the incoming raw data and provide additional data
-  // TODO check one instead of many
-  improvedServiceData: async (serviceName, raw) => {
+  //                        IMPROVE AND FILTER DATA
+  //                   ..................................
+  //
+  // for all improved* routines
+  // null means filtered
+  // otherwise an improved value
+
+  filterAndImproveServiceData: async (serviceName, raw) => {
     switch (serviceName) {
     case 'AudioInService':
-      return module.exports.improvedAudioIn(raw)
+      return module.exports.filterAndImproveAudioIn(raw)
     case 'AlarmClockService':
-      return raw
+      return module.exports.filterAndImproveAlarmClock(raw)
     case 'AVTransportService':
-      return module.exports.improvedAVTransport(raw)
+      return module.exports.filterAndImproveAVTransport(raw)
     case 'ConnectionManagerService':
-      return raw
+      return module.exports.filterAndImproveConnectionManager(raw)
     case 'ContentDirectoryService':
-      return raw
+      return module.exports.filterAndImproveContentDirectory(raw)
     case 'DevicePropertiesService':
-      return module.exports.improvedDeviceProperties(raw)
+      return module.exports.filterAndImproveDeviceProperties(raw)
     case 'GroupManagementService':
-      return module.exports.improvedGroupManagement(raw)
+      return module.exports.filterAndImproveGroupManagement(raw)
     case 'GroupRenderingControlService':
-      return module.exports.improvedGroupRendering(raw)
+      return module.exports.filterAndImproveGroupRendering(raw)
     case 'MusicServicesService':
-      return raw
+      return module.exports.filterAndMusicServices(raw)
     case 'QueueService':
-      return raw
+      return module.exports.filterAndImproveQueue(raw)
     case 'RenderingControlService':
-      return module.exports.improvedRenderingControl(raw)
+      return module.exports.filterAndImproveRenderingControl(raw)
     case 'SystemPropertiesService':
-      return raw
-    case 'VirtualLineInService':
-      return raw
+      return module.exports.filterAndImproveSystemProperties(raw)
     case 'ZoneGroupTopologyService':
-      return module.exports.improvedZoneGroupTopology(raw)
+      return module.exports.filterAndImproveZoneGroupTopology(raw)
     }
   },
-  
-  improvedAudioIn: async function (raw) {
-    debug('method >>%s', 'improvedAudioIn')
-    
-    const improved = { 'playing': null, raw }
 
-    if (module.exports.isValidProperty(raw, ['Playing'])) {
-      improved.playing = raw.Playing
+  filterAndImproveAudioIn: async function (raw) {
+    debug('method >>%s', 'filterAndImproveAudioIn')
+    
+    const improved = { 'lineInConnected': null }
+
+    if (module.exports.isValidProperty(raw, ['LineInConnected'])) {
+      improved.lineInConnected = raw.LineInConnected
     }
 
     return improved
   },
 
-  improvedAVTransport: async (raw) => {
-    debug('method >>%s', 'improvedAvTransportData')
+  filterAndImproveAlarmClock: async (raw) => {
+    debug('method >>%s', 'filterAndImproveAlarmClock')
+    
+    const improved = { 'alarmListVersion': null }
 
-    const improved = { 'basics': {}, 'content': {}, 'playbackstate': null, raw }
+    if (module.exports.isValidProperty(raw, ['AlarmListVersion'])) {
+      improved.alarmListVersion = raw.AlarmListVersion 
+    }
 
+    return improved
+  },
+
+  filterAndImproveAVTransport: async (raw) => {
+    debug('method >>%s', 'filterAndImproveAVTransport')
+
+    // filter on for all as default
+    const improved = { 'basics': null, 'content': null, 'playbackstate': null, }
+   
     // bundle basics
-    let atLeastOneBasics = false
+    let filterBasics = true
+    const basics = {}
     if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
-      improved.basics.uri = raw.AVTransportURI
+      basics.uri = raw.AVTransportURI
       // eslint-disable-next-line max-len
-      improved.basics.processingUnit = module.exports.getProcessingUnit(improved.basics.uri)
-      atLeastOneBasics = true
+      basics.processingUnit = module.exports.getProcessingUnit(basics.uri)
+      filterBasics = false
     }
     if (module.exports.isValidProperty(raw, ['CurrentTransportActions'])) {
-      improved.basics.actions = raw.CurrentTransportActions // Stop,Next, ...
-      atLeastOneBasics = true
+      basics.validActions = raw.CurrentTransportActions // Stop,Next, ...
+      filterBasics = false
     }
     if (module.exports.isValidProperty(raw, ['CurrentValidPlayModes'])) {
-      improved.basics.validPlayModes = raw.CurrentValidPlayModes 
-      atLeastOneBasics = true
+      basics.validPlayModes = raw.CurrentValidPlayModes 
+      filterBasics = false
     }
     if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
-      improved.basics.playMode = raw.CurrentPlayMode // queue play mode
-      atLeastOneBasics = true
+      basics.playMode = raw.CurrentPlayMode // queue play mode
+      filterBasics = false
     }
-    // ... destroy object if no items found
-    if(!atLeastOneBasics) improved.basics = null
+    // ... items found, dont filter
+    if (!filterBasics) improved.basics = Object.assign({}, basics) 
 
     // bundle content
-    improved.content = {} 
-    let atLeastOneContent = false
+    let filterContent = true
+    const content = {} 
     // ... Enqueued is the original command - has impact on AVTransport and Track, .. 
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
-      improved.content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
-      atLeastOneContent = true
+      content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
+      filterContent = false
     }
     if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
-      improved.content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
-      atLeastOneContent = true
+      content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
+      filterContent = false
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
-      improved.content.title = raw.CurrentTrackMetaData.Title
-      atLeastOneContent = true
+      content.title = raw.CurrentTrackMetaData.Title
+      filterContent = false
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
-      improved.content.artist = raw.CurrentTrackMetaData.Artist
-      atLeastOneContent = true
+      content.artist = raw.CurrentTrackMetaData.Artist
+      filterContent = false
     }
-
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
-      improved.content.album = raw.CurrentTrackMetaData.Album
-      atLeastOneContent = true
+      content.album = raw.CurrentTrackMetaData.Album
+      filterContent = false
     }
     if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
-      improved.content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
-      atLeastOneContent = true
+      content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
+      filterContent = false
     }  
-    // added this without atLeastOneContent as it is helpful but not necessary
+    // ... added this without atLeastOneContent as it is helpful but not necessary
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
-      improved.content.playbackstate = raw.TransportState.toLowerCase()
+      content.playbackstate = raw.TransportState.toLowerCase()
     }
     // ... destroy object if no items found
-    if(!atLeastOneContent) improved.content = null
+    if(!filterContent) improved.content = Object.assign({}, content) 
 
     // single item playback state
     if (module.exports.isValidProperty(raw, ['TransportState'])) {
@@ -133,23 +149,50 @@ module.exports = {
     return improved
   },
 
-  improvedDeviceProperties: async (raw) => {
-    debug('method >>%s', 'improvedDeviceProperties')
+  filterAndImproveConnectionManager: async function (raw) {
+    debug('method >>%s', 'filterAndImproveConnectionManager')
     
-    const improved = { raw }
+    const improved = { 'currentConnectionIds': null }
 
-    improved.micEnabled = null
-    if (module.exports.isValidProperty(raw, ['MicEnabled'])) {
-      improved.micEnabled = (raw.MicEnabled === 1)
+    if (module.exports.isValidProperty(raw, ['CurrentConnectionIDs'])) {
+      improved.currentConnectionIds = raw.CurrentConnectionIDs
     }
 
     return improved
   },
 
-  improvedGroupManagement: async (raw) => {
-    debug('method >>%s', 'improvedGroupManagementService')
+  filterAndImproveContentDirectory: async function (raw) {
+    debug('method >>%s', 'filterAndImproveContentDirectory')
     
-    const improved = { 'localGroupUuid': null, raw }
+    const improved = { 'mySonosUpdateId': null }
+
+    if (module.exports.isValidProperty(raw, ['FavoritesUpdateID'])) {
+      improved.mySonosUpdateId = raw.FavoritesUpdateID
+    }
+
+    return improved
+  },
+
+  filterAndImproveDeviceProperties: async (raw) => {
+    debug('method >>%s', 'filterAndImproveDeviceProperties')
+    
+    const improved = { 'micEnabled': null, 'invisible': null }
+
+    if (module.exports.isValidProperty(raw, ['MicEnabled'])) {
+      improved.micEnabled = (raw.MicEnabled === 1)
+    }
+
+    if (module.exports.isValidProperty(raw, ['Invisible'])) {
+      improved.invisible = raw.Invisible
+    }
+
+    return improved
+  },
+
+  filterAndImproveGroupManagement: async (raw) => {
+    debug('method >>%s', 'filterAndImproveGroupManagement')
+    
+    const improved = { 'localGroupUuid': null }
 
     if (module.exports.isValidProperty(raw, ['LocalGroupUUID'])) {
       improved.localGroupUuid = raw.LocalGroupUUID
@@ -158,10 +201,10 @@ module.exports = {
     return improved
   },
 
-  improvedGroupRendering: async (raw) => {
-    debug('method >>%s', 'improvedGroupRenderingData')
+  filterAndImproveGroupRendering: async (raw) => {
+    debug('method >>%s', 'filterAndImproveGroupRendering')
     
-    const improved = { 'groupMutestate': null, 'groupVolume': null,  raw }
+    const improved = { 'groupMutestate': null, 'groupVolume': null }
 
     if (module.exports.isValidProperty(raw, ['GroupMute'])) {
       improved.groupMutestate = (raw.GroupMute ? 'on' : 'off')
@@ -176,10 +219,34 @@ module.exports = {
     return improved
   },
 
-  improvedRenderingControl: async (raw) => {
-    debug('method >>%s', 'improvedRenderingControl')
+  filterAndMusicServices: async (raw) => {
+    debug('method >>%s', 'filterAndMusicServices')
     
-    const improved = { 'mutestate': null, 'volume': null,  raw }
+    const improved = { 'serviceListVersion': null }
+
+    if (module.exports.isValidProperty(raw, ['ServiceListVersion'])) {
+      improved.serviceListVersion = raw.ServiceListVersion 
+    }
+
+    return improved
+  },
+
+  filterAndImproveQueue: async (raw) => {
+    debug('method >>%s', 'filterAndImproveQueue')
+    
+    const improved = { 'updateId': null }
+
+    if (module.exports.isValidProperty(raw, ['UpdateID'])) {
+      improved.updateId = raw.UpdateID 
+    }
+
+    return improved
+  },
+
+  filterAndImproveRenderingControl: async (raw) => {
+    debug('method >>%s', 'filterAndImproveRenderingControl')
+    
+    const improved = { 'mutestate': null, 'volume': null }
     
     if (module.exports.isValidProperty(raw, ['Mute', 'Master'])) {
       improved.mutestate = (raw.Mute.Master? 'on' : 'off')
@@ -192,17 +259,112 @@ module.exports = {
     return improved
   },
 
-  improvedZoneGroupTopology: async (raw) => {
-    debug('method >>%s', 'improvedZoneData')
+  filterAndImproveSystemProperties: async (raw) => {
+    debug('method >>%s', 'filterAndImproveSystemProperties')
     
-    const improved = { 'allGroups': null, raw }
+    const improved = { 'updateId': null }
+
+    if (module.exports.isValidProperty(raw, ['UpdateID'])) {
+      improved.updateId = raw.UpdateID 
+    }
+
+    return improved
+  },
+
+  filterAndImproveVirtualLineIn: async (raw) => {
+    debug('method >>%s', 'filterAndImproveVirtualLineIn')
+    
+    const improved = { 'uriMetadata': null }
+
+    if (module.exports.isValidProperty(raw, ['AVTransportURIMetaData'])) {
+      improved.uriMetadata = raw.AVTransportURIMetaData 
+    }
+
+    return improved
+  },
+
+  filterAndImproveZoneGroupTopology: async (raw) => {
+    debug('method >>%s', 'filterAndImproveZoneGroupTopology')
+    
+    const improved = { 'allGroups': null }
 
     if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
-      improved.allGroups = raw.ZoneGroupState
+      improved.allGroups = await module.exports.transformGroupsAll(raw.ZoneGroupState)
     }
 
     return improved 
   },
+
+  //                        HELPER IMPROVE DATA
+  //                   ..................................
+  //
+  /** Transform ZoneTopology Event Data to an array of arrays of members. 
+   * Coordinator is always at position 0
+   * @param {object} eventData Array of Object, {name  , coordinator, members}
+   * coordinator = member = {name, host, port, uuid, ...}
+   * members is array of member
+   * 
+   * @returns {promise<members[]>}  Array of Array of members 
+   * members is {url, playerName, uuid, invisible, channelMapSet, groupName }
+   * 
+   * @throws {error} 
+   */
+
+  // TODO: zoneGroupId and invisible are missing! So alos invisible are shown
+
+  transformGroupsAll: async (eventData) => {
+    const groupsArraySorted = [] // result to be returned
+    let groupSorted // keeps the group members, now sorted
+    let coordinatorUuid = ''
+    let invisible = ''
+    let groupName = ''
+    let groupId = ''
+    let playerName = ''
+    let uuid = ''
+    let channelMapSet = ''
+    let url // type URL JavaScript build in
+    for (let iGroup = 0; iGroup < eventData.length; iGroup++) {
+      groupSorted = []
+      coordinatorUuid = eventData[iGroup].coordinator.uuid
+      groupName = eventData[iGroup].name
+      groupId = '' // currently not available
+
+      // first push coordinator (index 0) - data will be completed later
+      groupSorted.push({ 'uuid': coordinatorUuid, groupId, groupName })
+      
+      for (let iMember = 0; iMember < eventData[iGroup].members.length; iMember++) {
+        // eslint-disable-next-line max-len
+        url = new URL(`http://${eventData[iGroup].members[iMember].host}:${eventData[iGroup].members[iMember].port}`)
+        url.pathname = '' // clean up
+        uuid = eventData[iGroup].members[iMember].uuid
+        // my naming is playerName instead of the SONOS ZoneName
+        playerName = eventData[iGroup].members[iMember].name
+        invisible = false
+        channelMapSet = ''
+        // eslint-disable-next-line max-len
+        if (module.exports.isValidPropertyNotEmptyString(
+          eventData[iGroup].members[iMember], ['ChannelMapSet'])
+        ) {
+          channelMapSet = `${eventData[iGroup].members[iMember].ChannelMapSet.LF}:LF,LF; 
+          + ${eventData[iGroup].members[iMember].ChannelMapSet.RF}:RF,RF`
+        }
+            
+        if (eventData[iGroup].members[iMember].uuid !== coordinatorUuid) {
+          // push new except coordinator
+          groupSorted.push({ url, playerName, uuid, invisible, channelMapSet, groupId, groupName })
+        } else {
+          // update coordinator on position 0 with name
+          groupSorted[0].url = url
+          groupSorted[0].playerName = playerName
+          groupSorted[0].invisible = invisible
+          groupSorted[0].channelMapSet = channelMapSet
+        }
+      }
+      groupSorted = groupSorted.filter((member) => member.invisible === false)
+      groupsArraySorted.push(groupSorted)
+    }
+    return groupsArraySorted
+  }, 
 
   /** Returns the internal content category of a AVTransportURI. 
    * 
@@ -232,6 +394,10 @@ module.exports = {
       
     return source
   },
+
+  //                        HELPER GENERAL (NRCSP SHARE)
+  //                   ..................................
+  //
   
   encodeHtmlEntity: (htmlData) => {
     // htmlData string, not null, not undefined

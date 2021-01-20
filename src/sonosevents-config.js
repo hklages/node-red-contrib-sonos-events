@@ -39,6 +39,7 @@ module.exports = function (RED) {
       delete process.env.SONOS_LISTENER_PORT
       debug('ENV SONOS_LISTENER_PORT deleted')
     }
+
   }
 
   RED.nodes.registerType('sonosevents-config', sonosEventsConfigNode)
@@ -88,7 +89,7 @@ module.exports = function (RED) {
         })
       break
       
-    case 'getMultipeIps':
+    case 'getMultipleIps':
       getMultipleIps()
         .then((ipList) => {
           response.json(ipList)
@@ -122,7 +123,8 @@ module.exports = function (RED) {
     }
       
     default:
-      response.json('endpoint is not defined')
+      // eslint-disable-next-line max-len
+      response.json('available nrcse endpoints: discoverPlayers, discoverCoordinators, discoverGroups, getIp, getMultipleIps, getEnvListenerHost, getEnvListenerPort    ')
       
     }   
   })

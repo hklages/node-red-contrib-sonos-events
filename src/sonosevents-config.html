@@ -32,7 +32,7 @@
         $('#node-lookup-listenerHostname-icon').removeClass('fa-search')
         $('#node-lookup-listenerHostname-icon').addClass('spinner')
         $('#node-config-input-listenerHostname').addClass('disabled')
-        $.getJSON('nrcse/getMultipeIps', function(ips) {
+        $.getJSON('nrcse/getMultipleIps', function(ips) {
           $('#node-lookup-listenerHostname-icon').addClass('fa-search')
           $('#node-lookup-listenerHostname-icon').removeClass('spinner')
           $('#node-lookup-listenerHostname').removeClass('disabled')
