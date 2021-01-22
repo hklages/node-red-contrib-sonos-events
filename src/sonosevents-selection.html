@@ -4,6 +4,9 @@
   RED.nodes.registerType('sonosevents-selection', {
     category: 'sonosevents',
     defaults: {
+      name: {
+        value: ''
+      },
       confignode: {
         value: 'household',
         type: 'sonosevents-config'
@@ -31,10 +34,11 @@
       },
     inputs: 0, // set the number of inputs - only 0 or 1
     icon: 'sonos.png', // saved in icons/myicon.png
-    color: '#F87217',
+    color: '#FDD4AA',
     paletteLabel: 'events',
     label: function() {
-      return `${this.playerHostname} events`
+      let nodeLabel = this.name || `${this.playerHostname} events`
+      return nodeLabel
     },
     oneditprepare: function() {      
       
@@ -108,7 +112,7 @@
       // -- set the basics
       // index default
       const defaultEventIndex = 6
-      $('#node-input-events-container').css('min-height','400px').css('min-width','400px').editableList({
+      $('#node-input-events-container').css('min-height','350px').css('min-width','400px').editableList({
         header: $('<div>').append($.parseHTML('<div>Event name - order defines outputs</div>')),
         sortable: true,
         removable: true, 

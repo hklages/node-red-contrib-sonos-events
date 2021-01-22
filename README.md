@@ -9,9 +9,7 @@
 
 A single [Node-RED](https://nodered.org/) node to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 
-Subscribe to a list of event types to get notifications about changes related to tracks, playback state, volume, mute state, group volume, group mute state, topology, ...
-
-You can act on many kind of changes such as new tracks, tv on, playbackstate, volume, mute, group member changes or just use it to show the current state.
+You can act on many kind of changes such as new tracks, tv on, playbackstate, volume, mute, group member changes or just use it to show any state.
 
 Works well with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md).
 
@@ -27,7 +25,7 @@ Either open a github issue (preferred method) or send an email to nrcsplus@gmail
 
 - Single node for all events.
 
-- Should now work out of the box with RedMatic.
+- Works out of the box with RedMatic.
 
 ### Installation
 

@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.4.2] 2021-01-22
+
+#### Changed
+
+- color of node
+
+- bug fix: node name is now stored
+
 ### [0.4.1] 2021-01-22
 
 #### Added
