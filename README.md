@@ -10,7 +10,8 @@
 A single [Node-RED](https://nodered.org/) node to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 
 Subscribe to a list of event types to get notifications about changes related to tracks, playback state, volume, mute state, group volume, group mute state, topology, ...
-Reduce traffic and load by subscribing only to specific players.
+
+You can act on many kind of changes such as new tracks, tv on, playbackstate, volume, mute, group member changes or just use it to show the current state.
 
 Works well with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md).
 
@@ -18,7 +19,7 @@ This package is in no way connected to or supported by Sonos Incorporation.
 
 ### SUPPORT
 
-Read the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications)
+Read the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications) and have a look at the examples in Node-RED "Import", "Examples".
 
 Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com
 
@@ -32,8 +33,7 @@ Either open a github issue (preferred method) or send an email to nrcsplus@gmail
 
 Install directly from your Node-RED's setting palette.
 
-The status of the event listener ist at `http://<hostname>:<port>/status`
-Default port is 6329.
+The status of the event listener ist at `http://<hostname>:<port>/status`. Default port is 6329.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 

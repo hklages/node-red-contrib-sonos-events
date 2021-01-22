@@ -271,18 +271,6 @@ module.exports = {
     return improved
   },
 
-  filterAndImproveVirtualLineIn: async (raw) => {
-    debug('method >>%s', 'filterAndImproveVirtualLineIn')
-    
-    const improved = { 'uriMetadata': null }
-
-    if (module.exports.isValidProperty(raw, ['AVTransportURIMetaData'])) {
-      improved.uriMetadata = raw.AVTransportURIMetaData 
-    }
-
-    return improved
-  },
-
   filterAndImproveZoneGroupTopology: async (raw) => {
     debug('method >>%s', 'filterAndImproveZoneGroupTopology')
     

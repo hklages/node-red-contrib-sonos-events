@@ -90,19 +90,6 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     return acc + Object.keys(eventsByServices[current]).length
   }, 0)
 
-  // TODO has to be removed after testing on CCU
-  // // the node-sonos-ts build in program returns a wrong ip on CCU3 systems.
-  // // Therefore I use getRightCcuIp to correct that. 
-  // const alternativeHostname = await getRightCcuIp(0)
-  // const env_listenerHostname = process.env.SONOS_LISTENER_HOST
-  // if (!isTruthyAndNotEmptyString(env_listenerHostname)) {
-  //   process.env.SONOS_LISTENER_HOST = alternativeHostname
-  //   debug('listener hostname >>', alternativeHostname)
-  // } else {
-  //   // package node-sonos-ts uses the SONOS-LISTENER_HOST (overrules others)
-  //   debug('ENV used with value %s', env_listenerHostname)
-  // }
-
   // subscribe to the specified services/events
   serviceArray.forEach(async function (serviceName) {
     await player[serviceName].Events.on('serviceEvent',

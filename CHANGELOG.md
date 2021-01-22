@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.4.1] 2021-01-22
+
+#### Added
+
+- Examples
+
 ### [0.4.0] 2021-01-20
 
 #### Changed
