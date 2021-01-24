@@ -41,7 +41,7 @@ module.exports = {
     if (!isValidPropertyNotEmptyString(householdPlayers, ['ZoneGroupState'])) {
       throw new Error(`${PACKAGE_PREFIX} property ZoneGroupState is missing`)
     }
-    const decoded = decodeHtmlEntity(householdPlayers.ZoneGroupState)
+    const decoded = await decodeHtmlEntity(householdPlayers.ZoneGroupState)
     const attributeNamePrefix = '_'
     const options = { ignoreAttributes: false, attributeNamePrefix }
     const groups = await parser.parse(decoded, options) 

@@ -327,7 +327,7 @@ module.exports = {
         uuid = eventData[iGroup].members[iMember].uuid
         // my naming is playerName instead of the SONOS ZoneName
         playerName = eventData[iGroup].members[iMember].name
-        invisible = false
+        invisible = eventData[iGroup].members[iMember].Invisible
         channelMapSet = ''
         // eslint-disable-next-line max-len
         if (module.exports.isValidPropertyNotEmptyString(
@@ -387,10 +387,26 @@ module.exports = {
   //                   ..................................
   //
   
-  encodeHtmlEntity: (htmlData) => {
-    // htmlData string, not null, not undefined
-    // works with empty string
-    return String(htmlData).replace(/[<>"'&]/g, singleChar => {
+  /** Encodes specific HTML special characters such as &lt; and others. 
+   * Works with multiple occurrences.
+   * @param  {string} htmlData the string to be decode, maybe empty
+   * 
+   * @returns {Promise<string>} encoded string
+   * 
+   * @throws Error in case of htmlData is undefined, null, not a string
+   * 
+   * @since 2021-01-24
+   */
+
+  encodeHtmlEntity: async (htmlData) => {
+    if (htmlData == null) {
+      throw new Error('undefined or null')
+    }
+    if (typeof htmlData !== 'string') {
+      throw new Error('not string')
+    }
+
+    return htmlData.replace(/[<>"'&]/g, singleChar => {
       switch (singleChar) {
       case '<': return '&lt;'
       case '>': return '&gt;'
@@ -400,20 +416,24 @@ module.exports = {
       }
     })
   },
-   
-  /** Decodes some HTML special characters such as &lt; and others. 
-   * @param  {string} htmlData the string to be decode
+  
+  /** Decodes specific HTML special characters such as &lt; and others. 
+   * Works with multiple occurrences.
+   * @param  {string} htmlData the string to be decode, maybe empty
    * 
-   * @returns {string} decodes string
+   * @returns {Promise<string>} decoded string
    * 
-   * @throws nothing
+   * @throws Error in case of htmlData is undefined, null, not a string
    * 
-   * @since 2021-01-12
+   * @since 2021-01-24
    */
-  decodeHtmlEntity: (htmlData) => {
-    // htmlData string, not null, not undefined
-    // works with empty string
-    // should throw error if (not string) or null or undefined
+  decodeHtmlEntity: async (htmlData) => {
+    if (htmlData == null) {
+      throw new Error('undefined or null')
+    }
+    if (typeof htmlData !== 'string') {
+      throw new Error('not string')
+    }
     return String(htmlData).replace(/(&lt;|&gt;|&apos;|&quot;|&amp;)/g, substring => {
       switch (substring) {
       case '&lt;': return '<'

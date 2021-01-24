@@ -4,7 +4,7 @@
   "description": "A single Node-RED node to handle SONOS events in a local network.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha ./tests/Helper.js"
   },
   "keywords": [
     "sonos",
@@ -29,13 +29,15 @@
   "author": "hklages",
   "license": "MIT",
   "dependencies": {
-    "@svrooij/sonos": "^2.3.0",
+    "@svrooij/sonos": "^v2.4.0-beta.3",
     "debug": "^4.3.1",
     "fast-xml-parser": "^3.17.6"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.14.0",
     "@typescript-eslint/parser": "^4.14.0",
-    "eslint": "^7.18.0"
+    "chai": "^4.2.0",
+    "eslint": "^7.18.0",
+    "mocha": "^8.2.1"
   }
 }
