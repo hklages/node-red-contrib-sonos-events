@@ -12,7 +12,7 @@
 
 const PACKAGE_PREFIX = 'nrcse: '
 
-const { isTruthyAndNotEmptyString, isValidProperty, decodeHtmlEntity, isValidPropertyNotEmptyString
+const { isTruthyStringNotEmpty, isTruthy, isTruthyProperty, decodeHtmlEntity,
 } = require('./Helper.js')
 
 const parser = require('fast-xml-parser')
@@ -28,7 +28,7 @@ module.exports = {
    * @returns {promise<playerGroupData[]>} array of arrays with playerGroupData
    *          First group member is coordinator.
    *
-   * @throws {error} GetZoneGroupState, isValidPropertyNotEmptySTring, isTruthyAndNotEmptySTring
+   * @throws {error} GetZoneGroupState
    * @throws {error} 
    */
   getGroupsAllFast: async function (anyPlayer) {
@@ -38,17 +38,17 @@ module.exports = {
     const householdPlayers = await anyPlayer.GetZoneGroupState()
     
     // select only ZoneGroupState not the other attributes and check
-    if (!isValidPropertyNotEmptyString(householdPlayers, ['ZoneGroupState'])) {
+    if (!isTruthyProperty(householdPlayers, ['ZoneGroupState'])) {
       throw new Error(`${PACKAGE_PREFIX} property ZoneGroupState is missing`)
     }
     const decoded = await decodeHtmlEntity(householdPlayers.ZoneGroupState)
     const attributeNamePrefix = '_'
     const options = { ignoreAttributes: false, attributeNamePrefix }
     const groups = await parser.parse(decoded, options) 
-    if (!isTruthyAndNotEmptyString(groups)) {
+    if (!isTruthy(groups)) {
       throw new Error(`${PACKAGE_PREFIX} response form parse xml is invalid.`)
     }
-    if (!isValidProperty(groups, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
+    if (!isTruthyProperty(groups, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
       throw new Error(`${PACKAGE_PREFIX} response form parse xml: properties missing.`)
     }
 
@@ -120,7 +120,7 @@ module.exports = {
   extractGroup: async function (playerUrlHostname, allGroupsData, playerName) {
     debug('method >>%s', 'getGroup')
     
-    const searchByPlayerName = isTruthyAndNotEmptyString(playerName)
+    const searchByPlayerName = isTruthyStringNotEmpty(playerName)
 
     // find player in group bei playerName or playerUrlOrigin
     // find our players group in all groups- either by name or hostname

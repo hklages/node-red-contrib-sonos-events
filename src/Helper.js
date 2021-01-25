@@ -57,7 +57,7 @@ module.exports = {
     
     const improved = { 'lineInConnected': null }
 
-    if (module.exports.isValidProperty(raw, ['LineInConnected'])) {
+    if (module.exports.isTruthyProperty(raw, ['LineInConnected'])) {
       improved.lineInConnected = raw.LineInConnected
     }
 
@@ -69,7 +69,7 @@ module.exports = {
     
     const improved = { 'alarmListVersion': null }
 
-    if (module.exports.isValidProperty(raw, ['AlarmListVersion'])) {
+    if (module.exports.isTruthyProperty(raw, ['AlarmListVersion'])) {
       improved.alarmListVersion = raw.AlarmListVersion 
     }
 
@@ -85,21 +85,21 @@ module.exports = {
     // bundle basics
     let filterBasics = true
     const basics = {}
-    if (module.exports.isValidProperty(raw, ['AVTransportURI'])) {
+    if (module.exports.isTruthyProperty(raw, ['AVTransportURI'])) {
       basics.uri = raw.AVTransportURI
       // eslint-disable-next-line max-len
       basics.processingUnit = module.exports.getProcessingUnit(basics.uri)
       filterBasics = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentTransportActions'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentTransportActions'])) {
       basics.validActions = raw.CurrentTransportActions // Stop,Next, ...
       filterBasics = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentValidPlayModes'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentValidPlayModes'])) {
       basics.validPlayModes = raw.CurrentValidPlayModes 
       filterBasics = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentPlayMode'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentPlayMode'])) {
       basics.playMode = raw.CurrentPlayMode // queue play mode
       filterBasics = false
     }
@@ -110,39 +110,39 @@ module.exports = {
     let filterContent = true
     const content = {} 
     // ... Enqueued is the original command - has impact on AVTransport and Track, .. 
-    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
+    if (module.exports.isTruthyProperty(raw, ['EnqueuedTransportURIMetaData', 'UpnpClass'])) {
       content.enqueuedUpnp = raw.EnqueuedTransportURIMetaData.UpnpClass
       filterContent = false
     }
-    if (module.exports.isValidProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
+    if (module.exports.isTruthyProperty(raw, ['EnqueuedTransportURIMetaData', 'Title'])) {
       content.enqueuedTitle = raw.EnqueuedTransportURIMetaData.Title
       filterContent = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentTrackMetaData', 'Title'])) {
       content.title = raw.CurrentTrackMetaData.Title
       filterContent = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentTrackMetaData', 'Artist'])) {
       content.artist = raw.CurrentTrackMetaData.Artist
       filterContent = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentTrackMetaData', 'Album'])) {
       content.album = raw.CurrentTrackMetaData.Album
       filterContent = false
     }
-    if (module.exports.isValidProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentTrackMetaData', 'AlbumArtUri'])) {
       content.artUri = raw.CurrentTrackMetaData.AlbumArtUri
       filterContent = false
     }  
     // ... added this without atLeastOneContent as it is helpful but not necessary
-    if (module.exports.isValidProperty(raw, ['TransportState'])) {
+    if (module.exports.isTruthyProperty(raw, ['TransportState'])) {
       content.playbackstate = raw.TransportState.toLowerCase()
     }
     // ... destroy object if no items found
     if(!filterContent) improved.content = Object.assign({}, content) 
 
     // single item playback state
-    if (module.exports.isValidProperty(raw, ['TransportState'])) {
+    if (module.exports.isTruthyProperty(raw, ['TransportState'])) {
       improved.playbackstate = raw.TransportState.toLowerCase()
     }
  
@@ -154,7 +154,7 @@ module.exports = {
     
     const improved = { 'currentConnectionIds': null }
 
-    if (module.exports.isValidProperty(raw, ['CurrentConnectionIDs'])) {
+    if (module.exports.isTruthyProperty(raw, ['CurrentConnectionIDs'])) {
       improved.currentConnectionIds = raw.CurrentConnectionIDs
     }
 
@@ -166,7 +166,7 @@ module.exports = {
     
     const improved = { 'mySonosUpdateId': null }
 
-    if (module.exports.isValidProperty(raw, ['FavoritesUpdateID'])) {
+    if (module.exports.isTruthyProperty(raw, ['FavoritesUpdateID'])) {
       improved.mySonosUpdateId = raw.FavoritesUpdateID
     }
 
@@ -178,11 +178,11 @@ module.exports = {
     
     const improved = { 'micEnabled': null, 'invisible': null }
 
-    if (module.exports.isValidProperty(raw, ['MicEnabled'])) {
+    if (module.exports.isTruthyProperty(raw, ['MicEnabled'])) {
       improved.micEnabled = (raw.MicEnabled === 1)
     }
 
-    if (module.exports.isValidProperty(raw, ['Invisible'])) {
+    if (module.exports.isTruthyProperty(raw, ['Invisible'])) {
       improved.invisible = raw.Invisible
     }
 
@@ -194,7 +194,7 @@ module.exports = {
     
     const improved = { 'localGroupUuid': null }
 
-    if (module.exports.isValidProperty(raw, ['LocalGroupUUID'])) {
+    if (module.exports.isTruthyProperty(raw, ['LocalGroupUUID'])) {
       improved.localGroupUuid = raw.LocalGroupUUID
     }
 
@@ -206,12 +206,12 @@ module.exports = {
     
     const improved = { 'groupMutestate': null, 'groupVolume': null }
 
-    if (module.exports.isValidProperty(raw, ['GroupMute'])) {
+    if (module.exports.isTruthyProperty(raw, ['GroupMute'])) {
       improved.groupMutestate = (raw.GroupMute ? 'on' : 'off')
       debug('groupMuteState >>%s', improved.groupMutestate)
     }
 
-    if (module.exports.isValidProperty(raw, ['GroupVolume'])) {
+    if (module.exports.isTruthyProperty(raw, ['GroupVolume'])) {
       improved.groupVolume = String(raw.GroupVolume)
       debug('groupVolume >>%s', improved.groupVolume)
     }
@@ -224,7 +224,7 @@ module.exports = {
     
     const improved = { 'serviceListVersion': null }
 
-    if (module.exports.isValidProperty(raw, ['ServiceListVersion'])) {
+    if (module.exports.isTruthyProperty(raw, ['ServiceListVersion'])) {
       improved.serviceListVersion = raw.ServiceListVersion 
     }
 
@@ -236,7 +236,7 @@ module.exports = {
     
     const improved = { 'updateId': null }
 
-    if (module.exports.isValidProperty(raw, ['UpdateID'])) {
+    if (module.exports.isTruthyProperty(raw, ['UpdateID'])) {
       improved.updateId = raw.UpdateID 
     }
 
@@ -248,11 +248,11 @@ module.exports = {
     
     const improved = { 'mutestate': null, 'volume': null }
     
-    if (module.exports.isValidProperty(raw, ['Mute', 'Master'])) {
+    if (module.exports.isTruthyProperty(raw, ['Mute', 'Master'])) {
       improved.mutestate = (raw.Mute.Master? 'on' : 'off')
     }
     
-    if (module.exports.isValidProperty(raw, ['Volume', 'Master'])) {
+    if (module.exports.isTruthyProperty(raw, ['Volume', 'Master'])) {
       improved.volume = String(raw.Volume.Master)
     }
 
@@ -264,7 +264,7 @@ module.exports = {
     
     const improved = { 'updateId': null }
 
-    if (module.exports.isValidProperty(raw, ['UpdateID'])) {
+    if (module.exports.isTruthyProperty(raw, ['UpdateID'])) {
       improved.updateId = raw.UpdateID 
     }
 
@@ -276,7 +276,7 @@ module.exports = {
     
     const improved = { 'allGroups': null }
 
-    if (module.exports.isValidProperty(raw, ['ZoneGroupState'])) {
+    if (module.exports.isTruthyProperty(raw, ['ZoneGroupState'])) {
       improved.allGroups = await module.exports.transformGroupsAll(raw.ZoneGroupState)
     }
 
@@ -330,7 +330,7 @@ module.exports = {
         invisible = eventData[iGroup].members[iMember].Invisible
         channelMapSet = ''
         // eslint-disable-next-line max-len
-        if (module.exports.isValidPropertyNotEmptyString(
+        if (module.exports.isTruthyPropertyStringNotEmpty(
           eventData[iGroup].members[iMember], ['ChannelMapSet'])
         ) {
           channelMapSet = `${eventData[iGroup].members[iMember].ChannelMapSet.LF}:LF,LF; 
@@ -387,25 +387,23 @@ module.exports = {
   //                   ..................................
   //
   
-  /** Encodes specific HTML special characters such as &lt; and others. 
+  /** Encodes specific HTML special characters such as "<"" and others. 
    * Works with multiple occurrences.
-   * @param  {string} htmlData the string to be decode, maybe empty
+   * @param  {string} htmlData the string to be decode, maybe empty.
    * 
    * @returns {Promise<string>} encoded string
    * 
    * @throws Error in case of htmlData is undefined, null, not a string
    * 
-   * @since 2021-01-24
+   * @since 2021-01-25
    */
-
   encodeHtmlEntity: async (htmlData) => {
-    if (htmlData == null) {
-      throw new Error('undefined or null')
+    if (!module.exports.isTruthy(htmlData)) {
+      throw new Error('htmlData invalid/missing')
     }
     if (typeof htmlData !== 'string') {
-      throw new Error('not string')
+      throw new Error('htmlData is not string')
     }
-
     return htmlData.replace(/[<>"'&]/g, singleChar => {
       switch (singleChar) {
       case '<': return '&lt;'
@@ -417,7 +415,7 @@ module.exports = {
     })
   },
   
-  /** Decodes specific HTML special characters such as &lt; and others. 
+  /** Decodes specific HTML special characters such as "&lt;" and others. 
    * Works with multiple occurrences.
    * @param  {string} htmlData the string to be decode, maybe empty
    * 
@@ -425,14 +423,14 @@ module.exports = {
    * 
    * @throws Error in case of htmlData is undefined, null, not a string
    * 
-   * @since 2021-01-24
+   * @since 2021-01-25
    */
   decodeHtmlEntity: async (htmlData) => {
-    if (htmlData == null) {
-      throw new Error('undefined or null')
+    if (!module.exports.isTruthy(htmlData)) {
+      throw new Error('htmlData invalid/missing')
     }
     if (typeof htmlData !== 'string') {
-      throw new Error('not string')
+      throw new Error('htmlData is not string')
     }
     return String(htmlData).replace(/(&lt;|&gt;|&apos;|&quot;|&amp;)/g, substring => {
       switch (substring) {
@@ -444,80 +442,121 @@ module.exports = {
       }
     })
   },
-      
-  /** Validates whether property is safely accessible and "truthy". Empty string allowed.
+
+  /** Validates whether property is safely accessible and "truthy", any type.
    * truthy means not undefined, null, NaN, infinite - see method isTruthy.
    * @param  {object} nestedObj object
-   * @param  {array<string>} path property chain- must not be empty
+   * @param  {array<string>} pathArray property chain- must not be empty
    * 
    * @returns {boolean} property is accessible
    * 
-   * @throws nothing
+   * @throws error in case pathArray is not an array, non empty, elements string
+   * @throws error in case nestedObj is not an object
    */
-  isValidProperty: (nestedObj, pathArray) => {
+  isTruthyProperty: (nestedObj, pathArray) => {
+    
     const property = pathArray.reduce(
       (obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined),
       nestedObj
     )
+
     return module.exports.isTruthy(property)
   },
 
-  /** Validates whether property is safely accessible and "truthy". Empty string NOT allowed.
-   * truthy means not undefined, null, NaN, infinite - see method isTruthy.
+  /** Validates whether property is safely accessible and "truthy", type string, not empty
+   * Truthy means not undefined, null, NaN, infinite - see method isTruthy.
    * 
    * @param  {object} nestedObj object
-   * @param  {array<string>} path path property chain- must not be empty
+   * @param  {array<string>} path path property chain- must not be empty, type string
    * 
    * @returns {boolean} property is accessible and not empty string
    * 
-   * @throws nothing
+   * @throws error in case of wrong arguments!
    */
-  isValidPropertyNotEmptyString: (nestedObj, pathArray) => {
+  isTruthyPropertyStringNotEmpty: (nestedObj, pathArray) => {
+    
     const property = pathArray.reduce(
       (obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined),
       nestedObj
     )
-    return module.exports.isTruthyAndNotEmptyString(property)
+
+    return module.exports.isTruthyStringNotEmpty(property)
   },
 
-  /** Validates whether an const/variable is "valid". Empty string allowed!
+  /** Validates whether an const/variable is "truthy", any type
    * Empty object/array allowed. NOT allowed: undefined or null or NaN or Infinite.
    *  
-   * @param  {object|array|number|string|boolean} input const, variable
+   * @param  {any} input const, variable
    * 
    * @returns {boolean} 
    * false: let input; let input = null; let input = undefined; let input = NaN; 
-   * false: let input = 1.0 divide by 0; let input = -1.0 divide 0
-   * true: let input = '', let input = {}, let input = [], let input = true
+   * false: let input = 1.0 divide by 0; let input = -1.0 divide 0 (Infinite)
+   * true: let input = {}, let input = {'a':1]}, let input = [], let input = ['a', 'b']
+   * true: let input = true; let input = 1, let input = 100.5
+   * true: let input = '', let input = 'Hello World'
+   * 
+   * @since 2021-01-25
    * 
    * @throws nothing
    */
-  isTruthy: input => {
+  isTruthy: (input) => {
+
     return !(typeof input === 'undefined' || input === null
       //this avoids NaN, positive, negative Infinite
       || (typeof input === 'number' && !Number.isFinite(input)))
   },
 
-  /** Validates whether an constant/variable is "valid". Empty string NOT allowed!
-   * Empty object/array allowed. NOT allowed: undefined or null or NaN or Infinite.
+  /** Validates whether a constant/variable is "truthy", string, not empty.
+   * Not valid : undefined or null or NaN or Infinite, all types except string
    * 
-   * @param  {object|array|number|string|boolean} input const, variable
+   * @param {any} input const, variable
    * 
    * @returns {boolean} 
-   * false: let input = ''
    * false: let input; let input = null; let input = undefined; let input = NaN; 
-   * false: let input = 1.0 divide by 0; let input = -1.0 divide 0
-   * true: let input = {}, let input = [], let input = true
+   * false: let input = 1.0 divide by 0; let input = -1.0 divide 0 (Infinite)
+   * false: let input = {},let input = {'a':1]}, let input = [], let input = ['a', 'b']
+   * false: let input = true; let input = 1, let input = 100.5
+   * false: let input = ''
+   * true: non empty string
    * 
    * @throws nothing
+   * 
+   * @since 2021-01-25
    */
-  isTruthyAndNotEmptyString: input => {
+  isTruthyStringNotEmpty: (input) => {
+    
     return !(typeof input === 'undefined' || input === null
       //this avoids NaN, positive, negative Infinite, not empty string
-      || (typeof input === 'number' && !Number.isFinite(input)) || input === '')
+      || (typeof input === 'number' && !Number.isFinite(input))
+      || typeof input !== 'string' || input === '')
   },
 
-  /** Gets the property value specified by path. Use isValidProperty before!
+  /** Validates whether a constant/variable is "truthy" and array.
+   * Not valid : undefined or null or NaN or Infinite, all types except array
+   * 
+   * @param {any} input const, variable
+   * 
+   * @returns {boolean} 
+   * false: let input; let input = null; let input = undefined; let input = NaN; 
+   * false: let input = 1.0 divide by 0; let input = -1.0 divide 0 (Infinite)
+   * false: let input = {},let input = {'a':1]}
+   * false: let input = true; let input = 1, let input = 100.5
+   * false: let input = '', let input = 'Hello World'
+   * true: let input = [], let input = ['a', 'b']
+   * 
+   * @throws nothing
+   * 
+   * @since 2021-01-25
+   */
+  isTruthyArray: (input) => {
+    
+    return !(typeof input === 'undefined' || input === null
+      //this avoids NaN, positive, negative Infinite, not empty string
+      || (typeof input === 'number' && !Number.isFinite(input))
+      || !Array.isArray(input))
+  },
+
+  /** Gets the property value specified by path. Use isTruthyProperty before!
    * 
    * @param  {object} nestedObj object
    * @param  {array<string>} path path property chain- must not be empty

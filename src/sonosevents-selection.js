@@ -10,7 +10,7 @@
 
 'use strict'
 const {
-  isValidProperty, filterAndImproveServiceData
+  isTruthyProperty, filterAndImproveServiceData
 } = require('./Helper')
   
 const { SonosDevice } = require('@svrooij/sonos/lib')
@@ -40,7 +40,7 @@ module.exports = function (RED) {
     //  . as general delimiter!
     for (let i = 0; i < subscriptions.length; i++) {
       const [serviceName, eventName] = subscriptions[i].fullName.split('.')
-      if (!isValidProperty(eventsByServices, [serviceName])) {
+      if (!isTruthyProperty(eventsByServices, [serviceName])) {
         eventsByServices[serviceName] = {}
       }
       eventsByServices[serviceName][eventName] = i
@@ -113,7 +113,7 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
       
       const eventNames = Object.keys(mapEventToOutput)
       eventNames.forEach(eventName => {
-        if (isValidProperty(mapEventToOutput, [eventName])) {
+        if (isTruthyProperty(mapEventToOutput, [eventName])) {
           const msg = new Array(outputs).fill(null)
           const topic = topicPrefix + eventName
           if (eventName === 'raw') {

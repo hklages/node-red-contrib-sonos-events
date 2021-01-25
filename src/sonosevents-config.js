@@ -14,7 +14,7 @@ const { discoverPlayers, discoverCoordinators, discoverGroupsAll,
   getRightCcuIp, getIpStephan, getMultipleIps
 } = require('./Discovery.js')
 
-const { isValidPropertyNotEmptyString } = require('./Helper.js')
+const { isTruthyPropertyStringNotEmpty } = require('./Helper.js')
 
 const debug = require('debug')('nrcse:config')
 
@@ -24,7 +24,7 @@ module.exports = function (RED) {
     debug('method >>%s', 'sonosEventNode')
     RED.nodes.createNode(this, config)
 
-    if (isValidPropertyNotEmptyString(config, ['listenerHostname'])) {
+    if (isTruthyPropertyStringNotEmpty(config, ['listenerHostname'])) {
       process.env.SONOS_LISTENER_HOST = config.listenerHostname
       debug('listener modified - new hostname >>%s', config.listenerHostname)
     } else {
@@ -32,7 +32,7 @@ module.exports = function (RED) {
       debug('ENV SONOS_LISTENER_HOST deleted')
     }
     
-    if (isValidPropertyNotEmptyString(config, ['listenerPort'])) {
+    if (isTruthyPropertyStringNotEmpty(config, ['listenerPort'])) {
       process.env.SONOS_LISTENER_PORT = config.listenerPort
       debug('listener modified - new port >>%s', config.listenerPort)
     } else {

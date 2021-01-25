@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+### [0.4.3] 2021-01-29
+
+#### Changed
+
+- Using Mocha for testing, html encode async
+
 ### [0.4.2] 2021-01-22
 
 #### Changed
