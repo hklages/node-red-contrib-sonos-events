@@ -6,7 +6,13 @@ All notable changes to this project are documented in this file.
 
 #### Changed
 
-- Using Mocha for testing, html encode async
+- Using Mocha, chai for testing, html encode async
+
+- modified internal isTruthy suite
+
+- config node: no ENV variable for listener anymore and validating input for port and hostname
+
+- using sonos 2.4 beta 3
 
 ### [0.4.2] 2021-01-22
 

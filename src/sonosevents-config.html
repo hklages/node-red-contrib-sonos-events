@@ -12,11 +12,23 @@
         required: true
       },
       listenerHostname: {
-        value: ''
+        value: '',
+        // empty string or valid ip address
+        validate: RED.validators.regex(/^$|^(?:(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(\.(?!$)|$)){4}$/)
       },
-      listenerPort: {
-        value: ''
-      }
+      name: {value: ''},
+      listenerPort: { value: '',
+        validate: function(port){
+          // nothing entered
+          if (port === '' || (Number.isInteger(port) && port >= 0  && port <= 65536)) {
+            return true
+          } else {
+            return false
+          }
+        }
+      },
+      portType: { value: 'num'},
+      name: {value: ''}
     },
     label: function() {
       return this.name;
@@ -24,6 +36,7 @@
     oneditprepare: function() { 
 
       // listener hostname text field: enter ip or get a list
+
       try {
         $('#node-config-input-listenerHostname').autocomplete('destroy')
       } catch (err) {}
@@ -51,6 +64,15 @@
             .autocomplete('search', '')
         })
       })
+
+      // set up typed input for port
+      $('#node-config-input-listenerPort').typedInput({
+        default: 'num',
+        typeField: $('#node-input-portType'),
+        types: ['num']
+      })
+
+      
     }
   });
 </script>
@@ -66,22 +88,19 @@
   </div>
 
   <div class="form-tips">
-    Listener hostname: In cases where the default hostname does not work you may select a different one.
-    This change modifies the ENVIRONMENT variable SONOS_LISTENER_HOST.<br><br>
-    Do NOT manually modify this ENVIRONMENT variable.<br><br>
+    Listener hostname: In cases where the default hostname does not work you can select a different one. Push the button and select one or enter the data.<br><br>
     You need to restart Node-RED to apply this change. 
   </div><br>
 
   <!-- listener port -->
   <div class="form-row">
-   <label for="node-config-input-listenerPort" style="width: 30%;"><i class="fa fa-globe"></i> Listener port</label>
+    <label for="node-config-input-listenerPort" style="width: 30%;"><i class="fa fa-globe"></i> Listener port</label>
     <input type="text" id="node-config-input-listenerPort" placeholder="use default" style="width: auto;">
+    <input type="hidden" id="node-input-portType"/>
   </div>
 
   <div class="form-tips">
-    Listener port: In cases where the default port 6329 does not work you may provide a different one. 
-    This change modifies the ENVIRONMENT variable SONOS_LISTENER_PORT.<br><br>
-    Do NOT manually modify this ENVIRONMENT variable.<br><br>
+    Listener port: In cases where the default port 6329 does not work you can enter a different one.<br><br>
     You need to restart Node-RED to apply this change.
   </div><br>
 

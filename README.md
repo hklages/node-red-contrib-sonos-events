@@ -19,7 +19,9 @@ This package is in no way connected to or supported by Sonos Incorporation.
 
 Read the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications) and have a look at the examples in Node-RED "Import", "Examples".
 
-Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com
+To get more debugging information just set ENV variable `DEBUG` to `nrcse:*` or `sonos:*`
+
+Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com (english or german)
 
 ### NEWS
 

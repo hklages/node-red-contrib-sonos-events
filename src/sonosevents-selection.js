@@ -15,6 +15,8 @@ const {
   
 const { SonosDevice } = require('@svrooij/sonos/lib')
 
+const { SonosEventListener } = require('@svrooij/sonos/lib')
+
 const debug = require('debug')('nrcse:selection')
 
 module.exports = function (RED) {
@@ -79,7 +81,7 @@ module.exports = function (RED) {
 
 async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     
-  // global definition
+  // general definition for this node
   let errorCount = 0 
 
   // get all services
@@ -90,6 +92,10 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     return acc + Object.keys(eventsByServices[current]).length
   }, 0)
 
+  // what port, host ...
+  debug('event listener status >>%s',
+    JSON.stringify(SonosEventListener.DefaultInstance.GetStatus()))
+  
   // subscribe to the specified services/events
   serviceArray.forEach(async function (serviceName) {
     await player[serviceName].Events.on('serviceEvent',

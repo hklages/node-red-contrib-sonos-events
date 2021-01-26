@@ -11,10 +11,12 @@
 'use strict'
 
 const { discoverPlayers, discoverCoordinators, discoverGroupsAll,
-  getRightCcuIp, getIpStephan, getMultipleIps
+  getRightCcuIp, getHostIpV230, getMultipleIps
 } = require('./Discovery.js')
 
 const { isTruthyPropertyStringNotEmpty } = require('./Helper.js')
+
+const { SonosEventListener } = require('@svrooij/sonos/lib')
 
 const debug = require('debug')('nrcse:config')
 
@@ -23,23 +25,24 @@ module.exports = function (RED) {
   function sonosEventsConfigNode (config) {
     debug('method >>%s', 'sonosEventNode')
     RED.nodes.createNode(this, config)
-
-    if (isTruthyPropertyStringNotEmpty(config, ['listenerHostname'])) {
-      process.env.SONOS_LISTENER_HOST = config.listenerHostname
-      debug('listener modified - new hostname >>%s', config.listenerHostname)
-    } else {
-      delete process.env.SONOS_LISTENER_HOST
-      debug('ENV SONOS_LISTENER_HOST deleted')
-    }
     
-    if (isTruthyPropertyStringNotEmpty(config, ['listenerPort'])) {
-      process.env.SONOS_LISTENER_PORT = config.listenerPort
-      debug('listener modified - new port >>%s', config.listenerPort)
+    const update = {}
+    if (isTruthyPropertyStringNotEmpty(config, ['listenerHostname'])) {
+      update.newHost = config.listenerHostname
+      debug('listener host provided - using host >>%s', config.listenerHostname)
     } else {
-      delete process.env.SONOS_LISTENER_PORT
-      debug('ENV SONOS_LISTENER_PORT deleted')
+      update.newHost = undefined
+      debug('listener host not provided - using default host')
     }
 
+    if (isTruthyPropertyStringNotEmpty(config, ['listenerPort'])) {
+      update.newPort = Number(config.listenerPort)
+      debug('port provided - using port >>%s', Number(config.listenerPort))
+    } else {
+      update.newPort = undefined
+      debug('listener port not provided - using default port 6329')
+    }
+    SonosEventListener.DefaultInstance.UpdateSettings(update)
   }
 
   RED.nodes.registerType('sonosevents-config', sonosEventsConfigNode)
@@ -100,7 +103,7 @@ module.exports = function (RED) {
       break
 
     case 'getIpStephan':
-      getIpStephan()
+      getHostIpV230()
         .then((ipList) => {
           response.json(ipList)
         })

@@ -128,9 +128,7 @@ module.exports = {
     return addresses
   },
 
-  getIpStephan: async () => {
-    // now the new version since 2021-01-18
-
+  getHostIpV230: async () => {
     const ifaces = networkInterfaces()
 
     let interfaces = Object.keys(ifaces).filter((k) => k !== 'lo0')
