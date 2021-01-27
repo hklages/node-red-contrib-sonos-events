@@ -12,6 +12,8 @@ All notable changes to this project are documented in this file.
 
 - config node: no ENV variable for listener anymore and validating input for port and hostname
 
+- changed property processingUnit to processingType
+
 - using sonos 2.4 beta 3
 
 ### [0.4.2] 2021-01-22

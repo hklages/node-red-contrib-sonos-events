@@ -88,7 +88,7 @@ module.exports = {
     if (module.exports.isTruthyProperty(raw, ['AVTransportURI'])) {
       basics.uri = raw.AVTransportURI
       // eslint-disable-next-line max-len
-      basics.processingUnit = module.exports.getProcessingUnit(basics.uri)
+      basics.processingType  = module.exports.getProcessingType(basics.uri)
       filterBasics = false
     }
     if (module.exports.isTruthyProperty(raw, ['CurrentTransportActions'])) {
@@ -363,7 +363,7 @@ module.exports = {
    * 
    * @throws nothing
    */
-  getProcessingUnit: (avTransportUri) => {
+  getProcessingType: (avTransportUri) => {
     debug('method >>%s', 'internalSource')
 
     // TODO arg is string and not empty
