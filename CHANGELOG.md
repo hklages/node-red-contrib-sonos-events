@@ -10,6 +10,8 @@ All notable changes to this project are documented in this file.
 
 - modified internal isTruthy suite
 
+- property Invisible is now in group and device properties
+
 - config node: no ENV variable for listener anymore and validating input for port and hostname
 
 - changed property processingUnit to processingType

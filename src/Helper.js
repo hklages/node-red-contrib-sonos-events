@@ -103,7 +103,7 @@ module.exports = {
       basics.playMode = raw.CurrentPlayMode // queue play mode
       filterBasics = false
     }
-    // ... items found, dont filter
+    // ... items found, don't filter
     if (!filterBasics) improved.basics = Object.assign({}, basics) 
 
     // bundle content
