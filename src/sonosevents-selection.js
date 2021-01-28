@@ -17,6 +17,8 @@ const { SonosDevice } = require('@svrooij/sonos/lib')
 
 const { SonosEventListener } = require('@svrooij/sonos/lib')
 
+const  request   = require('axios').default
+
 const debug = require('debug')('nrcse:selection')
 
 module.exports = function (RED) {
@@ -50,12 +52,12 @@ module.exports = function (RED) {
 
     // subscribe in async wrapper with status and error handling
     asyncSubscribeToMultipleEvents(node, player, eventsByServices)
-      .then((success) => { // success, when handler is successfully established
-        node.status({ fill: 'green', shape: 'ring', text: 'connected' })
-        node.debug(`success >>${JSON.stringify(success)}`)
+      .then((port) => { // success, when handler is successfully established
+        node.status({ fill: 'green', shape: 'ring', text: `connected: ${port}` })
+        node.debug(`port >>${JSON.stringify(port)}`)
       })
       .catch((error) => {
-        node.status({ fill: 'red', shape: 'ring', text: 'disconnected' })
+        node.status({ fill: 'red', shape: 'ring', text: 'disconnected: ' + error.message })
         node.debug(`error subscribe>>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
       })
  
@@ -79,12 +81,20 @@ module.exports = function (RED) {
   RED.nodes.registerType('sonosevents-selection', sonosEventsSelectionNode)
 }
 
+/** Subscribe to multiple services, filter properties and send messages for a given player.
+ * @param {object} node current node
+ * @param {object} player sonos-ts player object
+ * @param {object} eventsByServices such as 
+ *                  "RenderingControlService":{"raw":0}} 0 stands for output index
+ *
+ * @returns {promise<string>} host:port OK
+ * 
+ * @throws errors isTruthyPropertyStringNotEmpty, isTruthyProperty
+ */
 async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
-    
+  debug('method >>%s', 'asyncSubscribeToMultipleEvents')
   // general definition for this node
   let errorCount = 0 
-
-  // get all services
   const serviceArray = Object.keys(eventsByServices)
 
   // get number of events = number of outputs
@@ -92,6 +102,33 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     return acc + Object.keys(eventsByServices[current]).length
   }, 0)
 
+  // validate ip (with time out) and get the device capabilities
+  let capabilities = []
+  let response
+  try {
+    response = await request.get(`http://${player.host}:${player.port}/info`, { timeout: 4000 })  
+  } catch (error) {
+    debug('invalid player - http request >>%s', JSON.stringify(error.message))
+    // TODO check ECONNREFUSED
+    throw new Error('invalid player - error or timed out')
+  }
+  if (isTruthyProperty(response, ['data', 'device', 'capabilities'])) {
+    capabilities = response.data.device.capabilities
+  } else {
+    throw new Error('invalid player - missing capabilities)')
+  }
+
+  // do events "DevicePropertiesService.micEnabled", "AudioInService.lineInConnected"
+  // match capabilities: VOICE, LINE_IN, (HT_PLAYBACK to be implemented)
+  if (isTruthyProperty(eventsByServices, ['DevicePropertiesService', 'micEnabled'])
+      && !capabilities.includes('VOICE')) {
+    throw new Error('micEnabled not possible')
+  }
+  if (isTruthyProperty(eventsByServices, ['AudioInService', 'lineInConnected'])
+    && !capabilities.includes('LINE_IN')) {
+    throw new Error('lineInConnected not possible')
+  }
+  
   // what port, host ...
   debug('event listener status >>%s',
     JSON.stringify(SonosEventListener.DefaultInstance.GetStatus()))
@@ -103,7 +140,7 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
     debug('subscribed to >>%s', serviceName)
   })
   
-  return true
+  return SonosEventListener.DefaultInstance.GetStatus().port
 
   // .............. sendMsg functions ...............
   // only output to requested output lines, prepare data

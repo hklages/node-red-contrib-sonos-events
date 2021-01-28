@@ -113,7 +113,7 @@
       // index default
       const defaultEventIndex = 6
       $('#node-input-events-container').css('min-height','350px').css('min-width','400px').editableList({
-        header: $('<div>').append($.parseHTML('<div>Event name - order defines outputs</div>')),
+        header: $('<div>').append($.parseHTML('<div>Events - order defines outputs</div>')),
         sortable: true,
         removable: true, 
         addButton: 'add',
@@ -174,7 +174,7 @@
   </div>
   <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
     Config node: Default name is household. Please use only ONE config node for all nodes. 
-    Use Node-RED menu item Configuration Nodes to remove duplicates.
+    Use Node-RED menu item "Configuration Nodes" to remove duplicates.
    </div><br>
 
   <!-- SONOS player hostname such such 192.168.178.37-->
@@ -184,7 +184,7 @@
     <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
   </div>
   <div class="form-tips">
-    Player: Use search button to discover player in your local network and select one. Don't create multiple nodes with same player.
+    Player: Use search button to discover player in your local network and select one. Don't create multiple nodes with same player - use link node instead.
   </div><br>
 
   <!-- Events-->
@@ -208,7 +208,6 @@
   <br>
     
   <!-- Dialog help -->
-    Further information: See the help.
 </script>
 
 <!-- Help text (HTML) -->
@@ -224,7 +223,7 @@
   </ul>
   
   <br>
-  Keep in Mind that for many of these events you have to subscribe to the coordinator of group. 
+  Keep in Mind that for many of these events you have to subscribe to the group coordinator. 
   <br><br>
   Best practice: Only one node per group or per player and distribute the results via link nodes. 
  <br><br>
