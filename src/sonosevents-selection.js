@@ -13,9 +13,7 @@ const {
   isTruthyProperty, filterAndImproveServiceData
 } = require('./Helper')
   
-const { SonosDevice } = require('@svrooij/sonos/lib')
-
-const { SonosEventListener } = require('@svrooij/sonos/lib')
+const { SonosDevice, SonosEventListener } = require('@svrooij/sonos/lib')
 
 const  request   = require('axios').default
 

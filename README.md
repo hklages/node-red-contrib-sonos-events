@@ -21,17 +21,17 @@ Read the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-
 
 To get more debugging information just set ENV variable `DEBUG` to `nrcse:*` or `sonos:*`
 
-Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com (english or german)
+Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com (english or german).
 
 ### NEWS
 
-- Single node for all events.
+- More error handling and information. Runs stable!
 
 - Works out of the box with RedMatic.
 
 ### Installation
 
-Install directly from your Node-RED's setting palette.
+Install directly from your Node-RED's setting palette.C
 
 The status of the event listener ist at `http://<hostname>:<port>/status`. Default port is 6329.
 
