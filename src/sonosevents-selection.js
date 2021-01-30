@@ -133,6 +133,7 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
   
   // subscribe to the specified services/events
   serviceArray.forEach(async function (serviceName) {
+    // const response = await ... does not provide any relevant information
     await player[serviceName].Events.on('serviceEvent',
       sendServiceMsgs.bind(this, serviceName, eventsByServices[serviceName], outputs))
     debug('subscribed to >>%s', serviceName)
