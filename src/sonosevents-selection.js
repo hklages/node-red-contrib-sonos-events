@@ -9,15 +9,18 @@
 */
 
 'use strict'
-const {
-  isTruthyProperty, filterAndImproveServiceData
-} = require('./Helper')
+
+const { PACKAGE_PREFIX } = require('./Globals.js')
+
+const { isTruthyProperty } = require('./Helper')
+
+const { filterAndImproveServiceData } = require('./Extensions')
   
 const { SonosDevice, SonosEventListener } = require('@svrooij/sonos/lib')
 
 const  request   = require('axios').default
 
-const debug = require('debug')('nrcse:selection')
+const debug = require('debug')(`${PACKAGE_PREFIX}:selection`)
 
 module.exports = function (RED) {
 

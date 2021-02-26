@@ -10,6 +10,8 @@
 
 'use strict'
 
+const { PACKAGE_PREFIX } = require('./Globals.js')
+
 const { discoverPlayers, discoverCoordinators, discoverGroupsAll,
   getRightCcuIp, getHostIpV230, getMultipleIps
 } = require('./Discovery.js')
@@ -18,7 +20,7 @@ const { isTruthyPropertyStringNotEmpty } = require('./Helper.js')
 
 const { SonosEventListener } = require('@svrooij/sonos/lib')
 
-const debug = require('debug')('nrcse:config')
+const debug = require('debug')(`${PACKAGE_PREFIX}:config`)
 
 module.exports = function (RED) {
 

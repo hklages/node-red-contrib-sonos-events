@@ -10,7 +10,7 @@
 
 'use strict'
 
-const { getGroupsAllFast } = require('./Sonos-Commands.js')
+const { getGroupsAllFast } = require('./Commands.js')
 
 const { SonosDeviceDiscovery, SonosDevice } = require('@svrooij/sonos/lib')
 

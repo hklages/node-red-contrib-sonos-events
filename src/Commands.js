@@ -5,19 +5,19 @@
  * 
  * @author Henning Klages
  * 
- * @since 2021-01-02
+ * @since 2021-02-26
 */
 
 'use strict'
 
-const PACKAGE_PREFIX = 'nrcse: '
+const { PACKAGE_PREFIX } = require('./Globals.js')
 
 const { isTruthyStringNotEmpty, isTruthy, isTruthyProperty, decodeHtmlEntity,
 } = require('./Helper.js')
 
 const parser = require('fast-xml-parser')
 
-const debug = require('debug')('nrcse:Sonos-Commands')
+const debug = require('debug')(`${PACKAGE_PREFIX}:commands`)
 
 module.exports = {
 
