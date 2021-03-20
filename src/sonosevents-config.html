@@ -82,14 +82,14 @@
 
   <!-- listener hostname -->
   <div class="form-row">
-    <label for="node-config-input-listenerHostname" style="width: 30%;"><i class="fa fa-globe"></i> Listener hostname</label>
+    <label for="node-config-input-listenerHostname" style="width: 30%;"><i class="fa fa-globe"></i> Listener IP address</label>
     <input type="text" id="node-config-input-listenerHostname" placeholder="use default" style="width: auto;">
     <button type="button" id="node-lookup-listenerHostname" class="red-ui-button"><i id="node-lookup-listenerHostname-icon" class="fa fa-search"></i></button>
   </div>
 
   <div class="form-tips">
-    Listener hostname: In cases where the default hostname does not work you can select a different one. Push the button and select one (the first is used by default) or enter the data.<br><br>
-    You need to restart Node-RED to apply this change. 
+    <b>Listener IP address</b>: In cases where the default hostname does not work you can select a different one. Push the button and select an IP address (the first is used by default) or enter the data.<br><br>
+    You need to restart Node-RED to apply this change. <br><br>
   </div><br>
 
   <!-- listener port -->
@@ -100,8 +100,9 @@
   </div>
 
   <div class="form-tips">
-    Listener port: In cases where the default port 6329 does not work you can enter a different one.<br><br>
-    You need to restart Node-RED to apply this change.
+    <b>Listener port</b>: In cases where the default port 6329 does not work you can enter a different one.<br><br>
+    You need to restart Node-RED to apply this change. <br><br>
+    <b>The port must be open and not used by another program!</b>
   </div><br>
 
   <!-- Node name -->

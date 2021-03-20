@@ -1,19 +1,25 @@
 /**
  * Collection of extensions related to events.
  *
- * @module Helpers
+ * @module Extensions
  * 
  * @author Henning Klages
  * 
- * @since 2021-02-26
+ * @since 2021-03-20
+ * 
+ * parseZoneGroupToArray copeid from sonos-plus
 */
 
 'use strict'
 
 const { PACKAGE_PREFIX } = require('./Globals.js')
 
-const { isTruthyPropertyStringNotEmpty, isTruthyProperty,
+const { isTruthyPropertyStringNotEmpty, isTruthyProperty, isTruthyStringNotEmpty, decodeHtmlEntity
 } = require('./Helper.js')
+
+const parser = require('fast-xml-parser')
+
+const { networkInterfaces } = require('os')
 
 const debug = require('debug')(`${PACKAGE_PREFIX}:extensions`)
 
@@ -93,7 +99,7 @@ module.exports = {
     if (isTruthyProperty(raw, ['AVTransportURI'])) {
       basics.uri = raw.AVTransportURI
       // eslint-disable-next-line max-len
-      basics.processingType  = module.exports.getProcessingType(basics.uri)
+      basics.processingType  = module.exports.getProcessingTypeFromUri(basics.uri)
       filterBasics = false
     }
     if (isTruthyProperty(raw, ['CurrentTransportActions'])) {
@@ -298,24 +304,24 @@ module.exports = {
    * members is array of member
    * 
    * @returns {promise<members[]>}  Array of Array of members 
-   * members is {url, playerName, uuid, invisible, channelMapSet, groupName }
+   * members is {urlObject, playerName, uuid, invisible, channelMapSet, groupName }
    * 
    * @throws {error} 
+   * 
+   * It is not possible to use my parsingGroup... as Stefan already did the parsing
    */
-
-  // TODO: zoneGroupId and invisible are missing! So alos invisible are shown
 
   transformGroupsAll: async (eventData) => {
     const groupsArraySorted = [] // result to be returned
     let groupSorted // keeps the group members, now sorted
     let coordinatorUuid = ''
-    let invisible = ''
-    let groupName = ''
     let groupId = ''
+    let groupName = ''
     let playerName = ''
     let uuid = ''
+    let invisible = ''
     let channelMapSet = ''
-    let url // type URL JavaScript build in
+    let urlObject // type URL JavaScript build in
     for (let iGroup = 0; iGroup < eventData.length; iGroup++) {
       groupSorted = []
       coordinatorUuid = eventData[iGroup].coordinator.uuid
@@ -327,14 +333,13 @@ module.exports = {
       
       for (let iMember = 0; iMember < eventData[iGroup].members.length; iMember++) {
         // eslint-disable-next-line max-len
-        url = new URL(`http://${eventData[iGroup].members[iMember].host}:${eventData[iGroup].members[iMember].port}`)
-        url.pathname = '' // clean up
+        urlObject = new URL(`http://${eventData[iGroup].members[iMember].host}:${eventData[iGroup].members[iMember].port}`)
+        urlObject.pathname = '' // clean up
         uuid = eventData[iGroup].members[iMember].uuid
         // my naming is playerName instead of the SONOS ZoneName
         playerName = eventData[iGroup].members[iMember].name
         invisible = eventData[iGroup].members[iMember].Invisible
         channelMapSet = ''
-        // eslint-disable-next-line max-len
         if (isTruthyPropertyStringNotEmpty(
           eventData[iGroup].members[iMember], ['ChannelMapSet'])
         ) {
@@ -344,10 +349,11 @@ module.exports = {
             
         if (eventData[iGroup].members[iMember].uuid !== coordinatorUuid) {
           // push new except coordinator
-          groupSorted.push({ url, playerName, uuid, invisible, channelMapSet, groupId, groupName })
+          // eslint-disable-next-line max-len
+          groupSorted.push({ url: urlObject, playerName, uuid, invisible, channelMapSet, groupId, groupName })
         } else {
           // update coordinator on position 0 with name
-          groupSorted[0].url = url
+          groupSorted[0].urlObject = urlObject
           groupSorted[0].playerName = playerName
           groupSorted[0].invisible = invisible
           groupSorted[0].channelMapSet = channelMapSet
@@ -368,7 +374,7 @@ module.exports = {
    * 
    * @throws nothing
    */
-  getProcessingType: (avTransportUri) => {
+  getProcessingTypeFromUri: (avTransportUri) => {
     debug('method >>%s', 'internalSource')
 
     // TODO arg is string and not empty
@@ -386,6 +392,151 @@ module.exports = {
     }
       
     return source
+  },
+
+  /** Parse outcome of GetZoneGroupState and create an array of all groups in household. 
+   * Each group consist of an array of players <playerGroupData>
+   * Coordinator is always in position 0. Group array may have size 1 (standalone)
+   * @param {string} zoneGroupState the xml data from GetZoneGroupState
+   * 
+   * @returns {promise<playerGroupData[]>} array of arrays with playerGroupData
+   *          First group member is coordinator.
+   *
+   * @throws {error} 'response form parse xml is invalid', 'parameter package name is missing',
+   * 'parameter zoneGroupState is missing`
+   * @throws {error} all methods
+   * 
+   * CAUTION: to be on the safe side: playerName uses String (see parse*Value)
+   * CAUTION: we use arrayMode false and do it manually
+   */
+  parseZoneGroupToArray: async (zoneGroupState) => { 
+    // validate method parameter
+    if (!isTruthyStringNotEmpty(zoneGroupState)) {
+      throw new Error('parameter zoneGroupState is missing')
+    }
+    
+    const decoded = await decodeHtmlEntity(zoneGroupState)
+    const groupState = await parser.parse(decoded, {
+      'arrayMode': false,
+      'ignoreAttributes': false,
+      'attributeNamePrefix': '_',
+      'parseNodeValue': false,
+      'parseAttributeValue': false
+    }) 
+    if (!isTruthyProperty(groupState, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
+      throw new Error(`${PACKAGE_PREFIX} response form parse xml: properties missing.`)
+    }
+    
+    // The following section is because of fast-xml-parser with 'arrayMode' = false
+    // if only ONE group then convert it to array with one member
+    let groupsAlwaysArray
+    if (Array.isArray(groupState.ZoneGroupState.ZoneGroups.ZoneGroup)) {
+      groupsAlwaysArray = groupState.ZoneGroupState.ZoneGroups.ZoneGroup.slice()
+    } else {
+      groupsAlwaysArray = [groupState.ZoneGroupState.ZoneGroups.ZoneGroup] 
+    }
+    // if a group has only ONE member then convert it to array with one member
+    groupsAlwaysArray = groupsAlwaysArray.map(group => {
+      if (!Array.isArray(group.ZoneGroupMember)) group.ZoneGroupMember = [group.ZoneGroupMember]
+      return group
+    })
+    //result is groupsArray is array<groupDataRaw> and always arrays (not single item)
+
+    // sort all groups that coordinator is in position 0 and select properties
+    // see typeDef playerGroupData. 
+    const groupsArraySorted = [] // result to be returned
+    let groupSorted // keeps the group members, now sorted
+    let coordinatorUuid = ''
+    let groupId = ''
+    let playerName = ''
+    let uuid = ''
+    let invisible = ''
+    let channelMapSet = ''
+    let urlObject // player JavaScript build-in URL
+    for (let iGroup = 0; iGroup < groupsAlwaysArray.length; iGroup++) {
+      groupSorted = []
+      coordinatorUuid = groupsAlwaysArray[iGroup]._Coordinator
+      groupId = groupsAlwaysArray[iGroup]._ID
+      // first push coordinator, other properties will be updated later!
+      groupSorted.push({ groupId, 'uuid': coordinatorUuid })
+      
+      for (let iMember = 0; iMember < groupsAlwaysArray[iGroup].ZoneGroupMember.length; iMember++) {
+        urlObject = new URL(groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._Location)
+        urlObject.pathname = '' // clean up
+        uuid = groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._UUID  
+        // my naming is playerName instead of the SONOS ZoneName
+        playerName = String(groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._ZoneName) // safety
+        invisible = (groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._Invisible === '1')
+        // eslint-disable-next-line max-len
+        channelMapSet = groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._ChannelMapSet || ''      
+        if (groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._UUID !== coordinatorUuid) {
+          // push new except coordinator
+          groupSorted.push({ urlObject, playerName, uuid, groupId, invisible, channelMapSet })
+        } else {
+          // update coordinator on position 0 with name
+          groupSorted[0].urlObject = urlObject
+          groupSorted[0].playerName = playerName
+          groupSorted[0].invisible = invisible
+          groupSorted[0].channelMapSet = channelMapSet
+        }
+      }
+      groupSorted = groupSorted.filter((member) => member.invisible === false)
+      groupsArraySorted.push(groupSorted)
+    }
+    return groupsArraySorted
+  },
+
+  getRightCcuIp: async (idx) => {
+
+    const addresses = []
+    const interfaces = networkInterfaces()
+    let name
+    let ifaces
+    let iface
+  
+    for (name in interfaces) {
+      // eslint-disable-next-line no-prototype-builtins
+      if(interfaces.hasOwnProperty(name)) {
+        ifaces = interfaces[name]
+        if(!/(loopback|vmware|internal)/gi.test(name)) {
+          for (let i = 0; i < ifaces.length; i++) {
+            iface = ifaces[i]
+            if (iface.family === 'IPv4' &&  !iface.internal && iface.address !== '127.0.0.1') {
+              addresses.push(iface.address)
+            }
+          }
+        }
+      }
+    }
+  
+    // If an index is passed only return it.
+    if(idx >= 0)
+      return addresses[idx]
+    return addresses
+  },
+
+  getMultipleIps: async () => {
+    
+    const addresses = []
+    let name
+    let ifaces
+    let iface
+    const interfaces = networkInterfaces()
+    for (name in interfaces) {
+      // eslint-disable-next-line no-prototype-builtins
+      if(interfaces.hasOwnProperty(name)) {
+        ifaces = interfaces[name]
+        if(!/(loopback|internal)/gi.test(name)) {
+          for (let i = 0; i < ifaces.length; i++) {
+            iface = ifaces[i]
+            if (iface.family === 'IPv4' &&  !iface.internal && iface.address !== '127.0.0.1') {
+              addresses.push(iface.address)
+            }
+          }
+        }
+      }
+    }
+    return addresses
   },
 
 } 

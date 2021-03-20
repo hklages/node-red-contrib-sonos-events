@@ -51,7 +51,7 @@
         $('#node-lookup-playerHostname-icon').removeClass('fa-search')
         $('#node-lookup-playerHostname-icon').addClass('spinner')
         $('#node-input-playerHostname').addClass('disabled')
-        $.getJSON('nrcse/discoverPlayers', function(sonosPlayer) {
+        $.getJSON('nrcse/discoverAllPlayerWithHost', function(sonosPlayer) {
           $('#node-lookup-playerHostname-icon').addClass('fa-search')
           $('#node-lookup-playerHostname-icon').removeClass('spinner')
           $('#node-lookup-playerHostname').removeClass('disabled')
@@ -173,18 +173,20 @@
     <input type="text" id="node-input-confignode" readonly style="width: auto;">
   </div>
   <div class="form-tips" id="node-tip-confignode"  style="width: auto;">
-    Config node: Default name is household. Please use only ONE config node for all nodes. 
+    <b>Config node</b>: Default name is household. Please use only ONE config node for all nodes. 
     Use Node-RED menu item "Configuration Nodes" to remove duplicates.
    </div><br>
 
   <!-- SONOS player hostname such such 192.168.178.37-->
   <div class="form-row">
-    <label for="node-input-playerHostname" style="width: 25%;"><i class="fa fa-volume-up"></i> Player </label>
+    <label for="node-input-playerHostname" style="width: 30%;"><i class="fa fa-volume-up"></i> Player IP address</label>
     <input type="text" id="node-input-playerHostname"  placeholder="192.168.x.x" style="width: 60%;">
-    <button type="button" id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
+    <button id="node-lookup-playerHostname" class="red-ui-button"><i id="node-lookup-playerHostname-icon" class="fa fa-search"></i></button>
   </div>
   <div class="form-tips">
-    Player: Use search button to discover player in your local network and select one. Don't create multiple nodes with same player - use link node instead.
+    <b>Player IP address</b>: Please enter - or search and select from list - a STATIC(!) SONOS-Player IP address. It must be a valid private address in your local network. 
+    <br><br>
+    Search requires open port 1900.
   </div><br>
 
   <!-- Events-->
@@ -192,7 +194,7 @@
     <ol id="node-input-events-container"></ol>
   </div>
   <div class="form-tips">
-    Events: Choose at least one, duplicates are not allowed.
+    <b>Events</b>: Choose at least one, duplicates are not allowed.
   </div><br>
 
   <!-- Amount of outputs -->
@@ -202,7 +204,7 @@
 
   <!-- Node name -->
   <div class="form-row">
-    <label for="node-input-name" style="width: 25%;"><i class="fa fa-tag"></i> Name</label>
+    <label for="node-input-name" style="width: 30%;"><i class="fa fa-tag"></i> Name</label>
     <input type="text" id="node-input-name" placeholder="This node name" />
   </div>
   <br>

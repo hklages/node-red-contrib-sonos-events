@@ -1,162 +1,144 @@
 /**
- * Routines for Discovery
+ * Collection of methods to handle the discovery of player.
  *
  * @module Discovery
  * 
  * @author Henning Klages
  * 
- * @since 2021-01-02
+ * @since 2021-02-13
+ * 
+ * copy from sonos-plus
 */
 
 'use strict'
+const { PACKAGE_PREFIX } = require('./Globals.js')
 
-const { getGroupsAllFast } = require('./Commands.js')
+const { getGroupsAll: getGroupsAll } = require('./Commands.js')
+
+const { matchSerialUuid: matchSerialUuid, getDeviceProperties: getDeviceProperties
+} = require('./Extensions.js')
 
 const { SonosDeviceDiscovery, SonosDevice } = require('@svrooij/sonos/lib')
 
-const { networkInterfaces } = require('os')
-
-const debug = require('debug')('nrcse:Discovery')
+const debug = require('debug')(`${PACKAGE_PREFIX}discovery`)
 
 module.exports = {
 
-  discoverGroupsAll: async () => {
-    // discover the first player. 
+  /** Does an async discovery of SONOS player, compares with given serial number 
+   * and returns ip address if success - otherwise throws error.
+   * @param {string} serialNumber player serial number
+   * @param {number} timeoutSeconds in seconds
+   * 
+   * @returns {Promise<object>} {'uuid', urlHost} su
+   * 
+   * @throws error 'could not find any player matching serial'
+   * @throws {error} all methods
+   * 
+   * Hint: discover the first one and retrieves all other player from that player.
+   * Thats very reliable -deterministic. 
+   * Discovering 10 player or more might be time consuming in some networks.
+   *
+   */
+  discoverSpecificSonosPlayerBySerial: async (serialNumber, timeoutSeconds) => {
+    debug('method:%s', 'discoverSpecificSonosPlayerBySerial')
     const deviceDiscovery = new SonosDeviceDiscovery()
-    debug('starting discovery')
-    const firstPlayerData = await deviceDiscovery.SearchOne(5)
-    debug('found one player found')
-    const firstPlayer = new SonosDevice(firstPlayerData.host)
-    const allGroups = await getGroupsAllFast(firstPlayer)
-    return allGroups
+    const firstPlayerData = await deviceDiscovery.SearchOne(timeoutSeconds)
+    debug('first player found')
+    const tsFirstPlayer = new SonosDevice(firstPlayerData.host)
+    const allGroups = await getGroupsAll(tsFirstPlayer)
+    const flatList = [].concat.apply([], allGroups) // merge array of array in array
+    debug('got more players, in total >>%s', flatList.length)
+
+    const reducedList = flatList.map((item) => { // only some properties
+      return {
+        'uuid': item.uuid,
+        'urlHost': item.urlObject.hostname
+      }
+    })
+    
+    // Do avoid sending n getDeviceProperties we uses stripped mac address
+    // uuid and serial number both include the mac address
+    let foundIndex = -1 // not found as default
+    for (let index = 0; index < reducedList.length; index++) {
+      if (matchSerialUuid(serialNumber, reducedList[index].uuid)) {
+        foundIndex = index
+        break
+      }
+    }
+    if (foundIndex < 0) {
+      new Error(`${PACKAGE_PREFIX} could not find any player matching serial`)
+    }
+    return reducedList[foundIndex].urlHost
   },
-  
-  discoverPlayers: async () => {
-    // discover the first one an get all others because we need also the player names
-    // and thats very reliable -deterministic. Discovering 10 player might be time consuming
-    // Sonos player knew best the topology
+
+  /** Does an async discovery of SONOS player and returns list of objects
+   * with properties label and value including the IP address = host.
+   * 
+   * @param {number} timeoutSeconds in seconds
+   * 
+   * @returns {Promise<object>} {'label', value}
+   * 
+   * @throws {error} all methods
+   * 
+   * Hint: discover the first one and retrieves all other player from that player.
+   * Thats very reliable -deterministic. 
+   * Discovering 10 player or more might be time consuming in some networks.
+   */
+  discoverAllPlayerWithHost: async (timeout) => {
+    debug('method:%s', 'discoverAllPlayerWithHost')
     const deviceDiscovery = new SonosDeviceDiscovery()
-    debug('starting discovery')
-    const firstPlayerData = await deviceDiscovery.SearchOne(5)
+    const firstPlayerData = await deviceDiscovery.SearchOne(timeout)
     debug('first player found')
     const firstPlayer = new SonosDevice(firstPlayerData.host)
-    const allGroups = await getGroupsAllFast(firstPlayer)
-
+    const allGroups = await getGroupsAll(firstPlayer)
     const flatList = [].concat.apply([], allGroups)
     debug('got more players, in total >>%s', flatList.length)
+
     const reducedList = flatList.map((item) => {
       return {
-        'label': item.playerName,
-        'value': item.url.hostname
+        'label': `${item.urlObject.hostname} for ${item.playerName}`,
+        'value': item.urlObject.hostname
       }
     })
     return reducedList
   },
 
-  discoverCoordinators: async function () {
-    // discover the first one an get all coordinators
-    // and thats very reliable -deterministic. Discovering 10 player might be time consuming
-    // Sonos player knew best the topology
+  /** Does an async discovery of SONOS player and returns list of objects
+   * with properties label and value including the serial number.
+   * 
+   * @param {number} timeoutSeconds in seconds
+   * 
+   * @returns {Promise<object>} {'label', value}
+   * 
+   * @throws {error} all methods
+   * 
+   * Hint: discover the first one and retrieves all other player from that player.
+   * Thats very reliable -deterministic. 
+   * Discovering 10 player or more might be time consuming in some networks.
+   */
+  discoverAllPlayerWithSerialnumber: async (timeout) => {
+    debug('method:%s', 'discoverAllPlayerWithSerialnumber')
     const deviceDiscovery = new SonosDeviceDiscovery()
-    debug('start discovery for first player')
-    const firstPlayerData = await deviceDiscovery.SearchOne(3)
+    const firstPlayerData = await deviceDiscovery.SearchOne(timeout)
     debug('first player found')
     const firstPlayer = new SonosDevice(firstPlayerData.host)
-    const allGroups = await getGroupsAllFast(firstPlayer)
-    const coordinatorArray = allGroups.map((group) => {
-      return group[0]
-    })
-    const reducedList = coordinatorArray.map((item) => {
+    const allGroups = await getGroupsAll(firstPlayer)
+    const flatList = [].concat.apply([], allGroups)
+    debug('got more players, in total >>%s', flatList.length)
+
+    for (let index = 0; index < flatList.length; index++) {
+      const deviceProperties = await getDeviceProperties(flatList[index].urlObject)
+      // we assume existence of that property
+      flatList[index].serialNumber = deviceProperties.serialNum
+    }
+
+    const reducedList = flatList.map((item) => {
       return {
-        'label': item.playerName,
-        'value': item.url.hostname
+        'label': `${item.serialNumber} for ${item.playerName}`,
+        'value': item.serialNumber
       }
     })
     return reducedList
-  },
-
-  getRightCcuIp: async (idx) => {
-
-    const addresses = []
-    const interfaces = networkInterfaces()
-    let name
-    let ifaces
-    let iface
-  
-    for (name in interfaces) {
-      // eslint-disable-next-line no-prototype-builtins
-      if(interfaces.hasOwnProperty(name)) {
-        ifaces = interfaces[name]
-        if(!/(loopback|vmware|internal)/gi.test(name)) {
-          for (let i = 0; i < ifaces.length; i++) {
-            iface = ifaces[i]
-            if (iface.family === 'IPv4' &&  !iface.internal && iface.address !== '127.0.0.1') {
-              addresses.push(iface.address)
-            }
-          }
-        }
-      }
-    }
-  
-    // If an index is passed only return it.
-    if(idx >= 0)
-      return addresses[idx]
-    return addresses
-  },
-
-  getMultipleIps: async () => {
-    
-    const addresses = []
-    let name
-    let ifaces
-    let iface
-    const interfaces = networkInterfaces()
-    for (name in interfaces) {
-      // eslint-disable-next-line no-prototype-builtins
-      if(interfaces.hasOwnProperty(name)) {
-        ifaces = interfaces[name]
-        if(!/(loopback|internal)/gi.test(name)) {
-          for (let i = 0; i < ifaces.length; i++) {
-            iface = ifaces[i]
-            if (iface.family === 'IPv4' &&  !iface.internal && iface.address !== '127.0.0.1') {
-              addresses.push(iface.address)
-            }
-          }
-        }
-      }
-    }
-    return addresses
-  },
-
-  getHostIpV230: async () => {
-    const ifaces = networkInterfaces()
-
-    let interfaces = Object.keys(ifaces).filter((k) => k !== 'lo0')
-    if (process.env.SONOS_LISTENER_INTERFACE) {
-      interfaces = interfaces.filter((i) => i === process.env.SONOS_LISTENER_INTERFACE)
-    } else {
-      // Remove unwanted interfaces on windows
-      interfaces = interfaces.filter((i) => i.indexOf('vEthernet') === -1
-        && i.indexOf('tun') === -1)
-    }
-    if (interfaces === undefined || interfaces.length === 0) {
-      throw new Error('No network interfaces found')
-    }
-
-    let address
-
-    interfaces.every((inf) => {
-      const currentInterface = ifaces[inf]
-      if (currentInterface === undefined) return true
-      const info = currentInterface.find((i) => i.family === 'IPv4' && i.internal === false)
-      if (info !== undefined) {
-        address = info.address
-        return false
-      }
-      return true
-    })
-
-    if (address !== undefined) return address
-    throw new Error('No non-internal ipv4 addresses found')
   }
-} 
+    
+}

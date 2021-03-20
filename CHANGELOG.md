@@ -2,11 +2,9 @@
 
 All notable changes to this project are documented in this file.
 
-### [1.0.0] 2021-02-01
+### [1.0.0] 2021-03-20
 
 #### Changed
-
-- Using Mocha, chai for testing, html encode async
 
 - modified internal isTruthy suite
 
@@ -16,9 +14,13 @@ All notable changes to this project are documented in this file.
 
 - changed property processingUnit to processingType
 
-- using sonos 2.4 beta 3
+- using Helper from sonos-plus
 
 - update depencencies
+
+- in GroupsMembers - url renamed to urlObject - same as in sonos -plus
+
+- Using Mocha, chai for testing, html encode async
 
 ### [0.4.2] 2021-01-22
 

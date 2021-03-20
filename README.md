@@ -9,29 +9,35 @@
 
 A single [Node-RED](https://nodered.org/) node to receive events from [SONOS](https://www.sonos.com/) player in your local network.
 
-You can act on many kind of changes such as new tracks, tv on, playbackstate, volume, mute, group member changes or just use it to show any state.
-
 Works well with [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md).
 
 This package is in no way connected to or supported by Sonos Incorporation.
 
-### SUPPORT
+**Functionality**
 
-Read the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications) and have a look at the examples in Node-RED "Import", "Examples".
+You can act on many kinds of changes such as new tracks, tv on, playbackstate, volume, mute, group member changes or just use it to show any state.
 
-To get more debugging information just set ENV variable `DEBUG` to `nrcse:*` or `sonos:*`
+Explore the full scope in the [wiki](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications).
 
-Either open a github issue (preferred method) or send an email to nrcsplus@gmail.com (english or german).
+### QUICKSTART - DEBUG - SUPPORT
+
+Read the [Quickstart](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications#quickstart) and the examples in Node-RED "Import", "Examples".
+
+Set the ENV variable DEBUG for debugging (example DEBUG=nrcsp:discovery). Usage is described here. Prefix: nrcsp: and available keywords: selection|config|commands|extensions|helper|discovery|).
+
+Open a GitHub issue (preferred method) or send an email to nrcsplus@gmail.com (English/German).
 
 ### NEWS
 
-- More error handling and information. Runs stable!
+- more code sharing with sister package node-red-contrib-sonos-plus
 
-- Works out of the box with RedMatic.
+- some bug fixing
+
+It works well together with the sister package [node-red-contrib-sonos-plus](https://www.npmjs.com/package/node-red-contrib-sonos-plus), executing SONOS commands.
 
 ### Installation
 
-Install directly from your Node-RED's setting palette.C
+Install directly from your Node-RED's setting palette.
 
 The status of the event listener ist at `http://<hostname>:<port>/status`. Default port is 6329.
 
@@ -41,4 +47,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 [Stephan](https://github.com/svrooij)
 
-[sonos Typescript team](https://github.com/svrooij/node-sonos-ts/blob/master/README.md) for the API.
+[svrooij node-sonos-ts](https://github.com/svrooij/node-sonos-ts/blob/master/README.md)

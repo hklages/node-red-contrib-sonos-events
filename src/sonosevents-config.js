@@ -12,9 +12,11 @@
 
 const { PACKAGE_PREFIX } = require('./Globals.js')
 
-const { discoverPlayers, discoverCoordinators, discoverGroupsAll,
-  getRightCcuIp, getHostIpV230, getMultipleIps
+const { discoverAllPlayerWithHost
 } = require('./Discovery.js')
+
+const { getRightCcuIp, getMultipleIps
+} = require('./Extensions.js')
 
 const { isTruthyPropertyStringNotEmpty } = require('./Helper.js')
 
@@ -55,8 +57,8 @@ module.exports = function (RED) {
 
   RED.httpNode.get('/nrcse/*', function (req, response) {
     switch (req.params[0]) {
-    case 'discoverPlayers':
-      discoverPlayers()
+    case 'discoverAllPlayerWithHost':
+      discoverAllPlayerWithHost()
         .then((playerList) => {
           response.json(playerList)
         })
@@ -65,25 +67,6 @@ module.exports = function (RED) {
         })
       break
       
-    case 'discoverCoordinators':
-      discoverCoordinators()
-        .then((playerList) => {
-          response.json(playerList)
-        })
-        .catch((error) => {
-          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-        })
-      break
-      
-    case 'discoverGroups':
-      discoverGroupsAll()
-        .then((playerList) => {
-          response.json(playerList)
-        })
-        .catch((error) => {
-          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-        })
-      break
     case 'getIp':
       getRightCcuIp(0)
         .then((ipList) => {
@@ -104,17 +87,6 @@ module.exports = function (RED) {
         })
       break
 
-    case 'getIpStephan':
-      getHostIpV230()
-        .then((ipList) => {
-          response.json(ipList)
-        })
-        .catch((error) => {
-          // eslint-disable-next-line max-len
-          debug('error stephan getIp >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-        })
-      break
-       
     case 'getEnvListenerHost': {
       const hostname = process.env.SONOS_LISTENER_HOST 
       response.json(`listener hostname >>${hostname}`)
@@ -129,7 +101,7 @@ module.exports = function (RED) {
       
     default:
       // eslint-disable-next-line max-len
-      response.json('available nrcse endpoints: discoverPlayers, discoverCoordinators, discoverGroups, getIp, getMultipleIps, getEnvListenerHost, getEnvListenerPort    ')
+      response.json('available nrcse endpoints: discoverAllPlayerWithHost, getIp, getMultipleIps, getEnvListenerHost, getEnvListenerPort    ')
       
     }   
   })

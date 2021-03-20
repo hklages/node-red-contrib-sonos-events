@@ -5,6 +5,8 @@
  * 
  * @author Henning Klages
  * 
+ * 
+ * 
  * @since 2021-02-26
 */
 
@@ -12,5 +14,6 @@
 
 module.exports = {
 
-  PACKAGE_PREFIX: 'nrcse:'
+  PACKAGE_PREFIX: 'nrcse:',
+  REGEX_3DIGITSSIGN: /^[-+]?\d{1,3}$/, 
 }
