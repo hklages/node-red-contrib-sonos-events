@@ -55,7 +55,7 @@ module.exports = function (RED) {
   //                                      Discovery & Local IP address
   // .......................................................................................
 
-  RED.httpNode.get('/nrcse/*', function (req, response) {
+  RED.httpAdmin.get('/nrcse/*', function (req, response) {
     switch (req.params[0]) {
     case 'discoverAllPlayerWithHost':
       discoverAllPlayerWithHost()
