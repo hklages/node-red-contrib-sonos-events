@@ -16,7 +16,7 @@ const { isTruthyProperty } = require('./Helper')
 
 const { filterAndImproveServiceData } = require('./Extensions')
   
-const { SonosDevice, SonosEventListener } = require('@svrooij/sonos/lib')
+const { SonosDevice, SonosEventListener, ServiceEvents } = require('@svrooij/sonos/lib')
 
 const  request   = require('axios').default
 
@@ -137,7 +137,7 @@ async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
   // subscribe to the specified services/events
   serviceArray.forEach(async function (serviceName) {
     // const response = await ... does not provide any relevant information
-    await player[serviceName].Events.on('serviceEvent',
+    await player[serviceName].Events.on(ServiceEvents.ServiceEvent,
       sendServiceMsgs.bind(this, serviceName, eventsByServices[serviceName], outputs))
     debug('subscribed to >>%s', serviceName)
   })
@@ -188,7 +188,7 @@ async function cancelAllSubscriptions (player, eventsByServices) {
   
   const serviceArray = Object.keys(eventsByServices)
   serviceArray.forEach(async function (serviceName) {
-    await player[serviceName].Events.removeAllListeners('serviceEvent')
+    await player[serviceName].Events.removeAllListeners(ServiceEvents.ServiceEvent)
     debug('unsubscribed to >>%s', serviceName)
   })
 }

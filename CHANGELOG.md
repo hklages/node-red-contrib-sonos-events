@@ -6,7 +6,9 @@ All notable changes to this project are documented in this file.
 
 #### Changed
 
-- Discovery for player and lister with httpAdmin and bugfixing
+- Discovery for player and lister with httpAdmin
+
+- using Services.ServiceEvent
 
 - update dependencies
 
