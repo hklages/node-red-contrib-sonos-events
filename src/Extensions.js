@@ -7,7 +7,7 @@
  * 
  * @since 2021-03-20
  * 
- * parseZoneGroupToArray copeid from sonos-plus
+ * parseZoneGroupToArray copied from sonos-plus
 */
 
 'use strict'
@@ -414,7 +414,7 @@ module.exports = {
     if (!isTruthyStringNotEmpty(zoneGroupState)) {
       throw new Error('parameter zoneGroupState is missing')
     }
-    
+      
     const decoded = await decodeHtmlEntity(zoneGroupState)
     const groupState = await parser.parse(decoded, {
       'arrayMode': false,
@@ -423,25 +423,41 @@ module.exports = {
       'parseNodeValue': false,
       'parseAttributeValue': false
     }) 
-    if (!isTruthyProperty(groupState, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
-      throw new Error(`${PACKAGE_PREFIX} response form parse xml: properties missing.`)
-    }
-    
+      
     // The following section is because of fast-xml-parser with 'arrayMode' = false
     // if only ONE group then convert it to array with one member
     let groupsAlwaysArray
-    if (Array.isArray(groupState.ZoneGroupState.ZoneGroups.ZoneGroup)) {
-      groupsAlwaysArray = groupState.ZoneGroupState.ZoneGroups.ZoneGroup.slice()
+    if (isTruthyProperty(groupState, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
+      // This is the standard case for new firmware!
+      if (Array.isArray(groupState.ZoneGroupState.ZoneGroups.ZoneGroup)) {
+        groupsAlwaysArray = groupState.ZoneGroupState.ZoneGroups.ZoneGroup.slice()
+      } else {
+        groupsAlwaysArray = [groupState.ZoneGroupState.ZoneGroups.ZoneGroup] 
+      }
+      // if a group has only ONE member then convert it to array with one member
+      groupsAlwaysArray = groupsAlwaysArray.map(group => {
+        if (!Array.isArray(group.ZoneGroupMember)) group.ZoneGroupMember = [group.ZoneGroupMember]
+        return group
+      })
     } else {
-      groupsAlwaysArray = [groupState.ZoneGroupState.ZoneGroups.ZoneGroup] 
+      // try this for very old firmware version, where ZoneGroupState is missing
+      if (isTruthyProperty(groupState, ['ZoneGroups', 'ZoneGroup'])) {
+        if (Array.isArray(groupState.ZoneGroups.ZoneGroup)) {
+          groupsAlwaysArray = groupState.ZoneGroups.ZoneGroup.slice()
+        } else {
+          groupsAlwaysArray = [groupState.ZoneGroups.ZoneGroup] 
+        }
+        // if a group has only ONE member then convert it to array with one member
+        groupsAlwaysArray = groupsAlwaysArray.map(group => {
+          if (!Array.isArray(group.ZoneGroupMember)) group.ZoneGroupMember = [group.ZoneGroupMember]
+          return group
+        })
+      } else {
+        throw new Error(`${PACKAGE_PREFIX} response form parse xml: properties missing.`)
+      }
     }
-    // if a group has only ONE member then convert it to array with one member
-    groupsAlwaysArray = groupsAlwaysArray.map(group => {
-      if (!Array.isArray(group.ZoneGroupMember)) group.ZoneGroupMember = [group.ZoneGroupMember]
-      return group
-    })
-    //result is groupsArray is array<groupDataRaw> and always arrays (not single item)
-
+    //result is groupsAlwaysArray is array<groupDataRaw> and always arrays (not single item)
+  
     // sort all groups that coordinator is in position 0 and select properties
     // see typeDef playerGroupData. 
     const groupsArraySorted = [] // result to be returned
@@ -459,7 +475,7 @@ module.exports = {
       groupId = groupsAlwaysArray[iGroup]._ID
       // first push coordinator, other properties will be updated later!
       groupSorted.push({ groupId, 'uuid': coordinatorUuid })
-      
+        
       for (let iMember = 0; iMember < groupsAlwaysArray[iGroup].ZoneGroupMember.length; iMember++) {
         urlObject = new URL(groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._Location)
         urlObject.pathname = '' // clean up
