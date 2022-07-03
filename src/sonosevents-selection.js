@@ -10,7 +10,7 @@
 
 'use strict'
 
-const { PACKAGE_PREFIX } = require('./Globals.js')
+const { PACKAGE_PREFIX, REGEX_IP, REGEX_DNS } = require('./Globals.js')
 
 const { isTruthyProperty } = require('./Helper')
 
@@ -18,7 +18,10 @@ const { filterAndImproveServiceData } = require('./Extensions')
   
 const { SonosDevice, SonosEventListener, ServiceEvents } = require('@svrooij/sonos/lib')
 
-const  request   = require('axios').default
+const request = require('axios').default
+
+const Dns = require('dns')
+const dnsPromises = Dns.promises
 
 const debug = require('debug')(`${PACKAGE_PREFIX}:selection`)
 
@@ -35,47 +38,73 @@ module.exports = function (RED) {
     // clear node status, get data from dialog
     const node = this
     node.status({})
-
-    // create new player from input such as 192.168.178.37
-    const player = new SonosDevice(config.playerHostname)
-
-    const subscriptions = config.events
-    // for each service create the required events with corresponding output index
-    const eventsByServices = {}
-    //  . as general delimiter!
-    for (let i = 0; i < subscriptions.length; i++) {
-      const [serviceName, eventName] = subscriptions[i].fullName.split('.')
-      if (!isTruthyProperty(eventsByServices, [serviceName])) {
-        eventsByServices[serviceName] = {}
+    let ipv4Address
+      
+    // async wrap to make it possible to use await dnsPromise
+    (async function () {
+      if (REGEX_IP.test(config.playerHostname)) {
+        ipv4Address = config.playerHostname // pure ip address
+      } else if (REGEX_DNS.test(config.playerHostname)) { // DNS name to be resolved
+        const ipv4Array = await dnsPromises.resolve4(config.playerHostname) 
+        // dnsPromise returns an array with all data
+        ipv4Address = ipv4Array[0] // converted to ip address
+      } else {
+        debug(`${PACKAGE_PREFIX} ipv4//DNS name >>${config.playerHostname} invalid syntax`)
+        node.status({ fill: 'red', shape: 'ring', text: 'ipv4/DNS name has invalid syntax' })
+        return
       }
-      eventsByServices[serviceName][eventName] = i
-    }
+      // ipv4Address is a pure ipv4 address and ready to use
 
-    // subscribe in async wrapper with status and error handling
-    asyncSubscribeToMultipleEvents(node, player, eventsByServices)
-      .then((port) => { // success, when handler is successfully established
-        node.status({ fill: 'green', shape: 'ring', text: `connected: ${port}` })
-        node.debug(`port >>${JSON.stringify(port)}`)
-      })
-      .catch((error) => {
-        node.status({ fill: 'red', shape: 'ring', text: 'disconnected: ' + error.message })
-        node.debug(`error subscribe>>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+      // create new player from input such as 192.168.178.37
+      const player = new SonosDevice(ipv4Address)
+
+      // for each service create the required events with corresponding output index
+      const subscriptions = config.events
+      const eventsByServices = {}
+      //  . as general delimiter!
+      for (let i = 0; i < subscriptions.length; i++) {
+        const [serviceName, eventName] = subscriptions[i].fullName.split('.')
+        if (!isTruthyProperty(eventsByServices, [serviceName])) {
+          eventsByServices[serviceName] = {}
+        }
+        eventsByServices[serviceName][eventName] = i
+      }
+
+      // subscribe and handle errors direct
+      subscribeToMultipleEvents(node, player, eventsByServices)
+        .then((port) => { // success, when handler is successfully established
+          node.status({ fill: 'green', shape: 'ring', text: `connected: ${port}` })
+          node.debug(`port >>${JSON.stringify(port)}`)
+        })
+        .catch((error) => {
+          node.status({ fill: 'red', shape: 'ring', text: 'disconnected: ' + error.message })
+          node.debug(`error subscribe>>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+        })
+      
+      // unsubscribe to all, when node is deleted (redeployed does delete)
+      node.on('close', function (done) {
+        cancelAllSubscriptions(player, eventsByServices)
+          .then(() => {
+            debug('nodeOnClose >>all subscriptions canceled')
+            done()
+          })
+          .catch(error => {
+            debug(`nodeOnClose error during cancel subscriptions >>
+            ${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
+            done(error)
+          })
       })
  
-    // unsubscribe to all, when node is deleted (redeployed does delete)
-    node.on('close', function (done) {
-      cancelAllSubscriptions(player, eventsByServices)
-        .then(() => {
-          debug('nodeOnClose >>all subscriptions canceled')
-          done()
+    })() // end of async wrapper for DNS
+      .catch((err) => {
+        debug('Could not resolve DNS name - error message >>%',
+          JSON.stringify(err, Object.getOwnPropertyNames(err)))
+        node.status({
+          fill: 'red', shape: 'ring',
+          text: 'Could not resolve DNS name >>' + config.playerHostname
         })
-        .catch(error => {
-          debug(`nodeOnClose error during cancel subscriptions >>
-            ${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
-          done(error)
-        })
-    })
-
+      })
+    
     return true
   }
 
@@ -92,7 +121,7 @@ module.exports = function (RED) {
  * 
  * @throws errors isTruthyPropertyStringNotEmpty, isTruthyProperty
  */
-async function asyncSubscribeToMultipleEvents (node, player, eventsByServices) {
+async function subscribeToMultipleEvents (node, player, eventsByServices) {
   debug('method >>%s', 'asyncSubscribeToMultipleEvents')
   // general definition for this node
   let errorCount = 0 

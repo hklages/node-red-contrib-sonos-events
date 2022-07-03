@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+### [1.1.0] 2022-07-03
+
+#### Added
+
+- DNS names for SONOS-Player are now allowed
+
+#### Changed
+
+- update dependencies
+
 ### [1.0.2] 2021-09-24
 
 #### Changed
