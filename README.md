@@ -29,6 +29,8 @@ Open a GitHub issue (preferred method) or send an email to nrcsplus@gmail.com (E
 
 ### NEWS
 
+- you can now use DNS names for SONOS-Players
+
 - discovery of player (selection node) and listener IP (config node) should now work in more environments such as Home Assistant
 
 ### Installation
