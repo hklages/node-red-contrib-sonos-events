@@ -9,7 +9,7 @@
 
 A single [Node-RED](https://nodered.org/) node to receive events from any [SONOS](https://www.sonos.com/) player in your local network.
 
-Works well with [Home Assistant](https://www.home-assistant.io/), [RedMatic](https://github.com/rdmtc/RedMatic/blob/master/README.en.md) and with the sister package [node-red-contrib-sonos-plus](https://www.npmjs.com/package/node-red-contrib-sonos-plus), executing SONOS commands.
+Works well with [Home Assistant](https://www.home-assistant.io/) and with the sister package [node-red-contrib-sonos-plus](https://www.npmjs.com/package/node-red-contrib-sonos-plus), executing SONOS commands.
 
 This package is in no way connected to or supported by Sonos Incorporation.
 
@@ -23,7 +23,7 @@ Explore the full scope in the [wiki](https://github.com/hklages/node-red-contrib
 
 Read the [Quickstart](https://github.com/hklages/node-red-contrib-sonos-plus/wiki/A.4-Events-aka-Notifications#quickstart) and the examples in Node-RED "Import", "Examples".
 
-Set the ENV variable DEBUG for debugging (example DEBUG=nrcsp:discovery). Usage is described [here](https://www.npmjs.com/package/debug). Prefix: nrcsp: and available keywords: selection|config|commands|extensions|helper|discovery|).
+Set the ENV variable DEBUG for debugging (example DEBUG=nrcse:discovery). Usage is described [here](https://www.npmjs.com/package/debug). Prefix: nrcse: and available keywords: selection|config|commands|extensions|helper|discovery|).
 
 Open a GitHub issue (preferred method) or send an email to nrcsplus@gmail.com (English/German).
 
