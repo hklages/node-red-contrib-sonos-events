@@ -2,7 +2,7 @@
  * This module is is to update the config data from given user input
  * and provides a http server to access the back end.
  * 
- * Endpoints at /nrcse
+ * Endpoints at <ip>:<port>/nrcse/
  * discoverAllPlayerWithHost - discover SONOS player via UDP SSDP broadcast
  * getIp, getMultipleIps - get server ip address from interface (my implementation)
  * getEnvListenerHost, getEnvListenerPort - ENV variables (usually empty)

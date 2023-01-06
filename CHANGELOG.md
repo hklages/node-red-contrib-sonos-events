@@ -8,6 +8,8 @@ All notable changes to this project are documented in this file.
 
 - New algorithm to discover player
 
+- Updated dependencies
+
 ### [1.1.0] 2022-07-03
 
 #### Added
