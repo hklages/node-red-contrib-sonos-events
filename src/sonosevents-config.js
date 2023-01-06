@@ -1,24 +1,28 @@
 /**
- * This module is to define the configuration.
+ * This module is is to update the config data from given user input
+ * and provides a http server to access the back end.
+ * 
+ * Endpoints at <ip>:<port>/nrcse/
+ * discoverAllPlayerWithHost - discover SONOS player via UDP SSDP broadcast
+ * getIp, getMultipleIps - get server ip address from interface (my implementation)
+ * getEnvListenerHost, getEnvListenerPort - ENV variables (usually empty)
  *
  * @module config
  * 
  * @author Henning Klages
  * 
- * @since 2021-01-02
+ * @since 2023-01-05
 */
 
 'use strict'
 
-const { PACKAGE_PREFIX } = require('./Globals.js')
+const { PACKAGE_PREFIX, TIMEOUT_PLAYER_DISCOVERY } = require('./Globals.js')
 
-const { discoverAllPlayerWithHost
-} = require('./Discovery.js')
+const { discoverAllPlayerWithHost } = require('./Discovery.js')
 
-const { getRightCcuIp, getMultipleIps
-} = require('./Extensions.js')
+const { getRightCcuIp, getMultipleIps } = require('./Extensions.js')
 
-const { isTruthyPropertyStringNotEmpty } = require('./Helper.js')
+const { isTruthyPropertyStringNotEmpty, isTruthyProperty } = require('./Helper.js')
 
 const { SonosEventListener } = require('@svrooij/sonos/lib')
 
@@ -52,18 +56,29 @@ module.exports = function (RED) {
   RED.nodes.registerType('sonosevents-config', sonosEventsConfigNode)
 
   //
-  //                                      Discovery & Local IP address
+  //       HTTP Server to access backend: Discovery & Local IP address
   // .......................................................................................
 
   RED.httpAdmin.get('/nrcse/*', function (req, response) {
+
     switch (req.params[0]) {
+
     case 'discoverAllPlayerWithHost':
+      debug('starting discovery')
       discoverAllPlayerWithHost()
         .then((playerList) => {
+          debug('found player during discovery')
           response.json(playerList)
         })
         .catch((error) => {
-          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+          if (isTruthyProperty(error, ['message'])) {
+            if (error.message === TIMEOUT_PLAYER_DISCOVERY) {
+              debug('could not find any player')   
+              response.json({ 'label': 'no player found', 'value': '' })
+              return
+            } 
+          }
+          debug('error discovery >>%s', JSON.stringify(error, Object.getOwnPropertyNames(error)))  
         })
       break
       
