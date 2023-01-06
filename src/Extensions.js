@@ -5,8 +5,6 @@
  * 
  * @author Henning Klages
  * 
- * @since 2021-03-20
- * 
  * parseZoneGroupToArray copied from sonos-plus
 */
 
@@ -17,7 +15,7 @@ const { PACKAGE_PREFIX } = require('./Globals.js')
 const { isTruthyPropertyStringNotEmpty, isTruthyProperty, isTruthyStringNotEmpty, decodeHtmlEntity
 } = require('./Helper.js')
 
-const parser = require('fast-xml-parser')
+const { XMLParser } = require('fast-xml-parser')
 
 const { networkInterfaces } = require('os')
 
@@ -395,37 +393,42 @@ module.exports = {
   },
 
   /** Parse outcome of GetZoneGroupState and create an array of all groups in household. 
-   * Each group consist of an array of players <playerGroupData>
-   * Coordinator is always in position 0. Group array may have size 1 (standalone)
+   * Each group consist of an array of player <playerGroupData>.
+   * Coordinator is always in position 0. Group array may have size 1 (standalone).
+   * Hidden players (example stereopair) are removed, if removeHiden = true (default).
    * @param {string} zoneGroupState the xml data from GetZoneGroupState
+   * @param {boolean} removeHidden removes all hidden payers  
    * 
    * @returns {promise<playerGroupData[]>} array of arrays with playerGroupData
-   *          First group member is coordinator.
+   *          First group member is coordinator
    *
    * @throws {error} 'response form parse xml is invalid', 'parameter package name is missing',
    * 'parameter zoneGroupState is missing`
    * @throws {error} all methods
    * 
-   * CAUTION: to be on the safe side: playerName uses String (see parse*Value)
-   * CAUTION: we use arrayMode false and do it manually
+   * CAUTION: To be on the safe side: playerName uses String (see parse*Value)
+   * CAUTION: We use arrayMode false and do it manually
    */
-  parseZoneGroupToArray: async (zoneGroupState) => { 
-    // validate method parameter
+  parseZoneGroupToArray: async (zoneGroupState, removeHidden = true) => { 
+    debug('method:%s', 'parseZoneGroupToArray')
+    // Validate method parameter
     if (!isTruthyStringNotEmpty(zoneGroupState)) {
       throw new Error('parameter zoneGroupState is missing')
     }
-      
+    
     const decoded = await decodeHtmlEntity(zoneGroupState)
-    const groupState = await parser.parse(decoded, {
-      'arrayMode': false,
-      'ignoreAttributes': false,
-      'attributeNamePrefix': '_',
-      'parseNodeValue': false,
-      'parseAttributeValue': false
-    }) 
-      
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '_',
+      parseAttributeValue: false,
+      parseTagValue: false,
+      arrayMode: false,
+      processEntities: false
+    })
+    const groupState = await parser.parse(decoded) 
+    
     // The following section is because of fast-xml-parser with 'arrayMode' = false
-    // if only ONE group then convert it to array with one member
+    // If only ONE group then convert it to array of groups with one member
     let groupsAlwaysArray
     if (isTruthyProperty(groupState, ['ZoneGroupState', 'ZoneGroups', 'ZoneGroup'])) {
       // This is the standard case for new firmware!
@@ -434,20 +437,20 @@ module.exports = {
       } else {
         groupsAlwaysArray = [groupState.ZoneGroupState.ZoneGroups.ZoneGroup] 
       }
-      // if a group has only ONE member then convert it to array with one member
+      // If a group has only ONE member then convert it to array with one member
       groupsAlwaysArray = groupsAlwaysArray.map(group => {
         if (!Array.isArray(group.ZoneGroupMember)) group.ZoneGroupMember = [group.ZoneGroupMember]
         return group
       })
     } else {
-      // try this for very old firmware version, where ZoneGroupState is missing
+      // Try this for very old firmware version, where ZoneGroupState is missing
       if (isTruthyProperty(groupState, ['ZoneGroups', 'ZoneGroup'])) {
         if (Array.isArray(groupState.ZoneGroups.ZoneGroup)) {
           groupsAlwaysArray = groupState.ZoneGroups.ZoneGroup.slice()
         } else {
           groupsAlwaysArray = [groupState.ZoneGroups.ZoneGroup] 
         }
-        // if a group has only ONE member then convert it to array with one member
+        // If a group has only ONE member then convert it to array with one member
         groupsAlwaysArray = groupsAlwaysArray.map(group => {
           if (!Array.isArray(group.ZoneGroupMember)) group.ZoneGroupMember = [group.ZoneGroupMember]
           return group
@@ -456,50 +459,113 @@ module.exports = {
         throw new Error(`${PACKAGE_PREFIX} response form parse xml: properties missing.`)
       }
     }
-    //result is groupsAlwaysArray is array<groupDataRaw> and always arrays (not single item)
-  
-    // sort all groups that coordinator is in position 0 and select properties
-    // see typeDef playerGroupData. 
+    // Result is groupsAlwaysArray is array<groupDataRaw> and always arrays (not single item)
+
+    // Sort all groups that coordinator is in position 0 and select properties
+    // See typeDef playerGroupData. 
     const groupsArraySorted = [] // result to be returned
-    let groupSorted // keeps the group members, now sorted
-    let coordinatorUuid = ''
-    let groupId = ''
-    let playerName = ''
-    let uuid = ''
-    let invisible = ''
-    let channelMapSet = ''
-    let urlObject // player JavaScript build-in URL
-    for (let iGroup = 0; iGroup < groupsAlwaysArray.length; iGroup++) {
-      groupSorted = []
-      coordinatorUuid = groupsAlwaysArray[iGroup]._Coordinator
-      groupId = groupsAlwaysArray[iGroup]._ID
-      // first push coordinator, other properties will be updated later!
+    for (const group of groupsAlwaysArray) {
+      let groupSorted = []
+      const coordinatorUuid = group._Coordinator
+      const groupId = group._ID
+      // First push coordinator, its other properties will be updated later!
       groupSorted.push({ groupId, 'uuid': coordinatorUuid })
-        
-      for (let iMember = 0; iMember < groupsAlwaysArray[iGroup].ZoneGroupMember.length; iMember++) {
-        urlObject = new URL(groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._Location)
+      const iCoord = 0 // used for later access
+      
+      for (const member of group.ZoneGroupMember) {
+        const urlObject = new URL(member._Location)
         urlObject.pathname = '' // clean up
-        uuid = groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._UUID  
-        // my naming is playerName instead of the SONOS ZoneName
-        playerName = String(groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._ZoneName) // safety
-        invisible = (groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._Invisible === '1')
-        // eslint-disable-next-line max-len
-        channelMapSet = groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._ChannelMapSet || ''      
-        if (groupsAlwaysArray[iGroup].ZoneGroupMember[iMember]._UUID !== coordinatorUuid) {
-          // push new except coordinator
+        const uuid = member._UUID  
+        // My naming is playerName instead of the SONOS ZoneName
+        const playerName = String(member._ZoneName) // safety
+        const invisible = (member._Invisible === '1')
+        const channelMapSet = member._ChannelMapSet || ''      
+        if (member._UUID !== coordinatorUuid) {
+          // Push new joiner 
           groupSorted.push({ urlObject, playerName, uuid, groupId, invisible, channelMapSet })
         } else {
-          // update coordinator on position 0 with name
-          groupSorted[0].urlObject = urlObject
-          groupSorted[0].playerName = playerName
-          groupSorted[0].invisible = invisible
-          groupSorted[0].channelMapSet = channelMapSet
+          // Update coordinator
+          groupSorted[iCoord].urlObject = urlObject
+          groupSorted[iCoord].playerName = playerName
+          groupSorted[iCoord].invisible = invisible
+          groupSorted[iCoord].channelMapSet = channelMapSet
         }
       }
-      groupSorted = groupSorted.filter((member) => member.invisible === false)
-      groupsArraySorted.push(groupSorted)
+      if (removeHidden) { // Removes all hidden player
+        groupSorted = groupSorted.filter((member) => member.invisible === false)   
+      }
+      // Invisible player form a group with 1 - remove that. Should not happen
+      if (groupSorted.length !== 0) groupsArraySorted.push(groupSorted)
     }
     return groupsArraySorted
+  },
+
+  /** Extract group for a given player. playerName - if isTruthyStringNotEmpty- 
+   * is overruling playerUrlHost
+   * @param {string} playerUrlHost (wikipedia) host such as 192.168.178.37
+   * @param {object} allGroupsData from getGroupsAll
+   * @param {string} [playerName] SONOS-Playername such as Kitchen 
+   * 
+   * @returns {promise<object>} returns object:
+   * { groupId, playerIndex, coordinatorIndex, members[]<playerGroupData> } 
+   *
+   * @throws {error} 'could not find given player in any group'
+   * @throws {error} all methods
+   */
+  extractGroup: async (playerUrlHost, allGroupsData, playerName) => {
+    debug('method:%s', 'extractGroup')
+    
+    // this ensures that playerName overrules given playerUrlHostname
+    const searchByPlayerName = isTruthyStringNotEmpty(playerName)
+
+    // find player in group bei playerName or playerUrlHostname
+    // playerName - if valid - overrules playerUrlHostname!
+    let foundGroupIndex = -1 // indicator for player NOT found
+    let visible
+    let groupId
+    let usedPlayerUrlHost = ''
+    for (let iGroup = 0; iGroup < allGroupsData.length; iGroup++) {
+      for (let iMember = 0; iMember < allGroupsData[iGroup].length; iMember++) {
+        visible = !allGroupsData[iGroup][iMember].invisible
+        groupId = allGroupsData[iGroup][iMember].groupId
+        if (searchByPlayerName) {
+          // we compare playerName (string) such as Küche
+          if (allGroupsData[iGroup][iMember].playerName === playerName && visible) {
+            foundGroupIndex = iGroup
+            usedPlayerUrlHost = allGroupsData[iGroup][iMember].urlObject.hostname
+            break // inner loop
+          }
+        } else {
+          // we compare by URL hostname such as '192.168.178.35'
+          if (allGroupsData[iGroup][iMember].urlObject.hostname === playerUrlHost && visible) {
+            foundGroupIndex = iGroup
+            usedPlayerUrlHost = allGroupsData[iGroup][iMember].urlObject.hostname
+            break // inner loop
+          }
+        }
+      }
+      if (foundGroupIndex >= 0) {
+        break // break also outer loop
+      }
+    }
+    if (foundGroupIndex === -1) {
+      throw new Error(`${PACKAGE_PREFIX} could not find given player in any group`)
+    }
+    
+    // remove all invisible players player (in stereopair there is one invisible)
+    const members = allGroupsData[foundGroupIndex].filter((member) => (member.invisible === false))
+
+    // find our player index in that group. At this position because we did filter!
+    // that helps to figure out role: coordinator, joiner, independent
+    const playerIndex
+      = members.findIndex((member) => (member.urlObject.hostname === usedPlayerUrlHost))
+
+    return {
+      groupId,
+      playerIndex,
+      'coordinatorIndex': 0,
+      members
+    }
   },
 
   getRightCcuIp: async (idx) => {
