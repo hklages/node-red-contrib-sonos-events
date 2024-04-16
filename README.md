@@ -25,7 +25,7 @@ Read the [Quickstart](https://github.com/hklages/node-red-contrib-sonos-plus/wik
 
 Set the ENV variable DEBUG for debugging (example DEBUG=nrcse:discovery). Usage is described [here](https://www.npmjs.com/package/debug). Prefix: nrcse: and available keywords: selection|config|commands|extensions|helper|discovery|).
 
-Open a GitHub issue (preferred method) or send an email to nrcsplus@gmail.com (English/German).
+Open a GitHub issue (preferred method) or send an email to `nrcsplus@gmail.com` (English/German).
 
 ### NEWS
 
