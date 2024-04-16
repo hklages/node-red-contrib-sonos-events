@@ -2,11 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
-### [1.2.1]2024-04-16
+### [1.2.2] 2024-04-16
 
 #### Changed
 
-- Just dependency update
+- dependency update
+
+### [1.2.1]2023-07-23
+
+#### Changed
+
+- bug fix discovery
 
 ### [1.2.0] 2023-01-06
 
