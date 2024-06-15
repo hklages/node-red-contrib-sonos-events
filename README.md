@@ -1,11 +1,16 @@
 ## node-red-contrib-sonos-events
 
-[![Dependencies](https://david-dm.org/hklages/node-red-contrib-sonos-events.svg)](https://david-dm.org/hklages/node-red-contrib-sonos-events)
 [![npm](https://img.shields.io/npm/dt/node-red-contrib-sonos-events.svg)](https://www.npmjs.com/package/node-red-contrib-sonos-events)
 [![npm](https://img.shields.io/npm/v/node-red-contrib-sonos-events.svg)](https://www.npmjs.com/package/node-red-contrib-sonos-events)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-NO-red.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/hklages/node-red-contrib-sonos-plus/master/LICENSE)
 [![Donation](https://img.shields.io/badge/donation-cappuccino-orange)](https://www.buymeacoffee.com/hklages)
+
+---
+
+> ## Since 2024-06-15 this package will no longer be actively developed
+
+---
 
 A single [Node-RED](https://nodered.org/) node to receive events from any [SONOS](https://www.sonos.com/) player in your local network.
 
@@ -44,5 +49,3 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Credentials
 
 [Stephan](https://github.com/svrooij)
-
-[svrooij node-sonos-ts](https://github.com/svrooij/node-sonos-ts/blob/master/README.md)

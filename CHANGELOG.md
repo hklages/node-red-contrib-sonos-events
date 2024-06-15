@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+### [1.2.5] 2024-06-15
+
+#### Changed
+
+- roll back dependency ts-sonos to version 2.5.0
+
 ### [1.2.4] 2024-05-01
 
 #### Changed

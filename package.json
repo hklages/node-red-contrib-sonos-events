@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-sonos-events",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A single Node-RED node to handle SONOS events in a local network.",
   "main": "index.js",
   "scripts": {},
@@ -28,10 +28,10 @@
   "author": "hklages",
   "license": "MIT",
   "dependencies": {
-    "@svrooij/sonos": "^2.6.0-beta.11",
-    "axios": "^1.6.8",
-    "debug": "^4.3.4",
-    "fast-xml-parser": "^4.3.6"
+    "@svrooij/sonos": "2.5.0",
+    "axios": "1.6.8",
+    "debug": "4.3.4",
+    "fast-xml-parser": "4.3.6"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.7.0",
