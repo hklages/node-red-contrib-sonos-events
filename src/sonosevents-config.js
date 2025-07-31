@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * This module is is to update the config data from given user input
  * and provides a http server to access the back end.
@@ -115,7 +116,6 @@ module.exports = function (RED) {
     }
       
     default:
-      // eslint-disable-next-line max-len
       response.json('available nrcse endpoints: discoverAllPlayerWithHost, getIp, getMultipleIps, getEnvListenerHost, getEnvListenerPort    ')
       
     }   
