@@ -29,11 +29,13 @@
   "license": "MIT",
   "dependencies": {
     "@svrooij/sonos": "2.5.0",
-    "axios": "1.11.0",
-    "debug": "4.4.1",
+    "axios": "^1.11.0",
+    "debug": "^4.4.1",
     "fast-xml-parser": "4.5.3"
   },
   "devDependencies": {
+    "install": "^0.13.0",
+    "npm": "^11.5.2",
     "typescript-eslint": "^8.38.0"
   },
   "engines": {
