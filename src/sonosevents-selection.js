@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Node create a selection of events.
  *
@@ -36,6 +37,7 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config)
    
     // clear node status, get data from dialog
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const node = this
     node.status({})
     let ipv4Address
@@ -207,7 +209,6 @@ async function subscribeToMultipleEvents (node, player, eventsByServices) {
     } catch (error) {
       errorCount++
       node.status({ fill: 'yellow', shape: 'ring', text: `error count ${errorCount}` })
-      // eslint-disable-next-line max-len
       node.debug(`error processing AVTransport event >>${JSON.stringify(error, Object.getOwnPropertyNames(error))}`)
     }
   }

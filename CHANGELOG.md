@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+### [1.2.6] 2025-07-31
+
+#### Changed
+
+- update dependencies
+
 ### [1.2.5] 2024-06-15
 
 #### Changed
@@ -80,7 +86,7 @@ All notable changes to this project are documented in this file.
 
 - using Helper from sonos-plus
 
-- update depencencies
+- update dependencies
 
 - in GroupsMembers - url renamed to urlObject - same as in sonos -plus
 
@@ -232,7 +238,7 @@ All notable changes to this project are documented in this file.
 
 - output for any value - not bundled
 
-- serach with httpAdmin instead of node
+- search with httpAdmin instead of node
 
 ### [0.0.10] 2021-01-02
 
